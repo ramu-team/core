@@ -40,6 +40,12 @@ interface MenuClientProps {
   ingredientsList: Ingredient[];
 }
 
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+} from '@ramu/ui/components/field';
+
 export default function MenuClient({ initialMenus, ingredientsList }: MenuClientProps) {
   const [isPending, startTransition] = useTransition();
   const [name, setName] = useState('');
@@ -131,7 +137,7 @@ export default function MenuClient({ initialMenus, ingredientsList }: MenuClient
         </CardHeader>
         <CardContent>
           {message && message.type === 'success' && (
-            <div className="rounded-md p-3 text-xs font-medium bg-emerald-500/10 text-emerald-500 mb-4">
+            <div className="rounded-md p-3 text-xs font-medium bg-emerald-500/10 text-emerald-500 mb-4 animate-in fade-in duration-300">
               {message.text}
             </div>
           )}
@@ -146,7 +152,7 @@ export default function MenuClient({ initialMenus, ingredientsList }: MenuClient
               {initialMenus.map((menu) => (
                 <div
                   key={menu.id}
-                  className="flex flex-col gap-3 rounded-lg border border-border/40 p-4 hover:border-amber-500/30 transition-all"
+                  className="flex flex-col gap-3 rounded-lg border border-border/40 p-4 hover:border-amber-500/30 transition-all bg-card"
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -210,107 +216,105 @@ export default function MenuClient({ initialMenus, ingredientsList }: MenuClient
           <CardDescription>Register a new Jamu and configure its recipe.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {message && message.type === 'error' && (
-              <div className="rounded-md p-3 text-xs font-medium bg-destructive/10 text-destructive">
-                {message.text}
-              </div>
-            )}
-
-            <div className="grid gap-1.5">
-              <label htmlFor="menu-name" className="text-xs font-semibold text-muted-foreground">
-                Jamu Name
-              </label>
-              <Input
-                id="menu-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Jamu Kunyit Asam"
-                required
-              />
-            </div>
-
-            <div className="grid gap-1.5">
-              <label htmlFor="description" className="text-xs font-semibold text-muted-foreground">
-                Description
-              </label>
-              <Input
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Berkhasiat menyegarkan tubuh..."
-              />
-            </div>
-
-            <div className="grid gap-1.5">
-              <label htmlFor="price" className="text-xs font-semibold text-muted-foreground">
-                Price (Rp)
-              </label>
-              <Input
-                id="price"
-                type="number"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="15000"
-                required
-              />
-            </div>
-
-            <div className="border border-border/40 rounded-lg p-3 bg-muted/20">
-              <span className="text-xs font-bold block mb-2 text-muted-foreground">Configure Recipe</span>
-
-              {/* Recipe Builder */}
-              <div className="flex gap-2 mb-3">
-                <select
-                  value={selectedIngredient}
-                  onChange={(e) => setSelectedIngredient(e.target.value)}
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <option value="">Select Ingredient</option>
-                  {ingredientsList.map((i) => (
-                    <option key={i.id} value={i.id}>
-                      {i.nama_bahan}
-                    </option>
-                  ))}
-                </select>
-
+          <form onSubmit={handleSubmit}>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="menu-name">Jamu Name</FieldLabel>
                 <Input
-                  type="number"
-                  value={dosage}
-                  onChange={(e) => setDosage(e.target.value)}
-                  placeholder="Volume (ml)"
-                  className="w-20"
+                  id="menu-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Jamu Kunyit Asam"
+                  required
                 />
+              </Field>
 
-                <Button type="button" size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={addIngredientToRecipe}>
-                  <PlusIcon className="size-4" />
-                </Button>
+              <Field>
+                <FieldLabel htmlFor="description">Description</FieldLabel>
+                <Input
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Berkhasiat menyegarkan tubuh..."
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="price">Price (Rp)</FieldLabel>
+                <Input
+                  id="price"
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="15000"
+                  required
+                />
+              </Field>
+
+              <div className="border border-border/40 rounded-lg p-3 bg-muted/20">
+                <span className="text-xs font-bold block mb-2 text-muted-foreground">Configure Recipe</span>
+
+                {/* Recipe Builder */}
+                <div className="flex gap-2 mb-3">
+                  <select
+                    value={selectedIngredient}
+                    onChange={(e) => setSelectedIngredient(e.target.value)}
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <option value="">Select Ingredient</option>
+                    {ingredientsList.map((i) => (
+                      <option key={i.id} value={i.id}>
+                        {i.nama_bahan}
+                      </option>
+                    ))}
+                  </select>
+
+                  <Input
+                    type="number"
+                    value={dosage}
+                    onChange={(e) => setDosage(e.target.value)}
+                    placeholder="Volume (ml)"
+                    className="w-20"
+                  />
+
+                  <Button type="button" size="icon" variant="outline" className="h-9 w-9 shrink-0" onClick={addIngredientToRecipe}>
+                    <PlusIcon className="size-4" />
+                  </Button>
+                </div>
+
+                {/* Recipe List */}
+                {recipe.length === 0 ? (
+                  <span className="text-xs text-muted-foreground italic block text-center py-2">No ingredients added.</span>
+                ) : (
+                  <div className="space-y-1.5 max-h-[120px] overflow-y-auto pr-1">
+                    {recipe.map((item) => {
+                      const matched = ingredientsList.find((i) => i.id === item.ingredientId);
+                      return (
+                        <div key={item.ingredientId} className="flex justify-between items-center bg-background px-2 py-1 rounded text-xs border border-border/40">
+                          <span>{matched?.nama_bahan}: {item.ml} ml</span>
+                          <button type="button" className="text-destructive font-bold" onClick={() => removeIngredientFromRecipe(item.ingredientId)}>
+                            &times;
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
-              {/* Recipe List */}
-              {recipe.length === 0 ? (
-                <span className="text-xs text-muted-foreground italic block text-center py-2">No ingredients added.</span>
-              ) : (
-                <div className="space-y-1.5 max-h-[120px] overflow-y-auto pr-1">
-                  {recipe.map((item) => {
-                    const matched = ingredientsList.find((i) => i.id === item.ingredientId);
-                    return (
-                      <div key={item.ingredientId} className="flex justify-between items-center bg-background px-2 py-1 rounded text-xs border border-border/40">
-                        <span>{matched?.nama_bahan}: {item.ml} ml</span>
-                        <button type="button" className="text-destructive font-bold" onClick={() => removeIngredientFromRecipe(item.ingredientId)}>
-                          &times;
-                        </button>
-                      </div>
-                    );
-                  })}
+              {message && message.type === 'error' && (
+                <div className="rounded-md bg-destructive/15 p-3 text-xs font-medium text-destructive text-center">
+                  {message.text}
                 </div>
               )}
-            </div>
 
-            <Button type="submit" className="w-full gap-1 h-9 mt-2" disabled={isPending}>
-              <PlusIcon className="size-4" />
-              {isPending ? 'Creating Catalog...' : 'Create Jamu'}
-            </Button>
+              <Field>
+                <Button type="submit" className="w-full gap-1 h-9 mt-2" disabled={isPending}>
+                  <PlusIcon className="size-4" />
+                  {isPending ? 'Creating Catalog...' : 'Create Jamu'}
+                </Button>
+              </Field>
+            </FieldGroup>
           </form>
         </CardContent>
       </Card>

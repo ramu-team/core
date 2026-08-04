@@ -23,6 +23,12 @@ interface IngredientsClientProps {
   initialIngredients: Ingredient[];
 }
 
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+} from '@ramu/ui/components/field';
+
 export default function IngredientsClient({ initialIngredients }: IngredientsClientProps) {
   const [isPending, startTransition] = useTransition();
   const [name, setName] = useState('');
@@ -95,47 +101,47 @@ export default function IngredientsClient({ initialIngredients }: IngredientsCli
           <CardDescription>Configure a new raw liquid ingredient.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {message && (
-              <div
-                className={`rounded-md p-3 text-xs font-medium ${
-                  message.type === 'success' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-destructive/10 text-destructive'
-                }`}
-              >
-                {message.text}
-              </div>
-            )}
+          <form onSubmit={handleSubmit}>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="name">Ingredient Name</FieldLabel>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ginger, Honey, etc."
+                  required
+                />
+              </Field>
 
-            <div className="grid gap-1.5">
-              <label htmlFor="name" className="text-xs font-semibold text-muted-foreground">
-                Ingredient Name
-              </label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Ginger, Honey, etc."
-                required
-              />
-            </div>
+              <Field>
+                <FieldLabel htmlFor="unit">Measurement Unit</FieldLabel>
+                <Input
+                  id="unit"
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                  placeholder="ml"
+                  required
+                />
+              </Field>
 
-            <div className="grid gap-1.5">
-              <label htmlFor="unit" className="text-xs font-semibold text-muted-foreground">
-                Measurement Unit
-              </label>
-              <Input
-                id="unit"
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                placeholder="ml"
-                required
-              />
-            </div>
+              {message && (
+                <div
+                  className={`rounded-md p-3 text-xs font-medium text-center ${
+                    message.type === 'success' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-destructive/10 text-destructive'
+                  }`}
+                >
+                  {message.text}
+                </div>
+              )}
 
-            <Button type="submit" className="w-full gap-1 h-9 mt-2" disabled={isPending}>
-              <PlusIcon className="size-4" />
-              {isPending ? 'Adding...' : 'Add Ingredient'}
-            </Button>
+              <Field>
+                <Button type="submit" className="w-full gap-1 h-9 mt-2" disabled={isPending}>
+                  <PlusIcon className="size-4" />
+                  {isPending ? 'Adding...' : 'Add Ingredient'}
+                </Button>
+              </Field>
+            </FieldGroup>
           </form>
         </CardContent>
       </Card>

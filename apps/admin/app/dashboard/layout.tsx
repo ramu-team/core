@@ -27,9 +27,26 @@ export default async function DashboardLayout({
   }
 
   // Fetch admin profile dari database
-  const admin = await prisma.admin.findUnique({
+  let admin = await prisma.admin.findUnique({
     where: { id: session.user.id },
   })
+
+  // Jika admin belum tersinkronisasi di database lokal, buat datanya secara otomatis
+  if (!admin) {
+    try {
+      admin = await prisma.admin.create({
+        data: {
+          id: session.user.id,
+          nama_admin: session.user.name || "Admin",
+          email: session.user.email || "admin@ramu.com",
+          password_hash: "neon_managed",
+          role: "Superadmin",
+        },
+      })
+    } catch (e) {
+      console.error("Failed to auto-create admin profile:", e)
+    }
+  }
 
   const sidebarUser = {
     name: admin?.nama_admin || session.user.name,

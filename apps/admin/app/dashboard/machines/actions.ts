@@ -25,6 +25,23 @@ export async function generateActivationCodeAction() {
   try {
     const activation_code = generateRandomCode();
 
+    // Sinkronisasi/Verifikasi profil admin sebelum insert untuk menghindari FK Constraint error
+    const adminExists = await prisma.admin.findUnique({
+      where: { id: session.user.id },
+    });
+
+    if (!adminExists) {
+      await prisma.admin.create({
+        data: {
+          id: session.user.id,
+          nama_admin: session.user.name || "Admin",
+          email: session.user.email || "admin@ramu.com",
+          password_hash: "neon_managed",
+          role: "Superadmin",
+        },
+      });
+    }
+
     await prisma.machineActivationCode.create({
       data: {
         activation_code,

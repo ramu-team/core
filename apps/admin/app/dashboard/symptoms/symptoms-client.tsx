@@ -25,6 +25,12 @@ interface SymptomsClientProps {
   initialSymptoms: SymptomOption[];
 }
 
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+} from '@ramu/ui/components/field';
+
 export default function SymptomsClient({ initialSymptoms }: SymptomsClientProps) {
   const [isPending, startTransition] = useTransition();
   const [name, setName] = useState('');
@@ -94,7 +100,7 @@ export default function SymptomsClient({ initialSymptoms }: SymptomsClientProps)
         </CardHeader>
         <CardContent className="space-y-6">
           {message && message.type === 'success' && (
-            <div className="rounded-md p-3 text-xs font-medium bg-emerald-500/10 text-emerald-500 mb-4">
+            <div className="rounded-md p-3 text-xs font-medium bg-emerald-500/10 text-emerald-500 mb-4 animate-in fade-in duration-300">
               {message.text}
             </div>
           )}
@@ -108,7 +114,7 @@ export default function SymptomsClient({ initialSymptoms }: SymptomsClientProps)
             categories.map((cat) => {
               const list = groupedSymptoms[cat] || [];
               return (
-                <div key={cat} className="space-y-2">
+                <div key={cat} className="space-y-2 animate-in slide-in-from-bottom-2 duration-300">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-1">
                     {cat} ({list.length})
                   </h3>
@@ -161,60 +167,58 @@ export default function SymptomsClient({ initialSymptoms }: SymptomsClientProps)
           <CardDescription>Configure a new standard symptom option.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {message && message.type === 'error' && (
-              <div className="rounded-md p-3 text-xs font-medium bg-destructive/10 text-destructive">
-                {message.text}
-              </div>
-            )}
+          <form onSubmit={handleSubmit}>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="symptom-name">Symptom Name</FieldLabel>
+                <Input
+                  id="symptom-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Pusing, Perut Kembung, dll."
+                  required
+                />
+              </Field>
 
-            <div className="grid gap-1.5">
-              <label htmlFor="symptom-name" className="text-xs font-semibold text-muted-foreground">
-                Symptom Name
-              </label>
-              <Input
-                id="symptom-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Pusing, Perut Kembung, dll."
-                required
-              />
-            </div>
+              <Field>
+                <FieldLabel htmlFor="category">Category</FieldLabel>
+                <select
+                  id="category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  {categories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </Field>
 
-            <div className="grid gap-1.5">
-              <label htmlFor="category" className="text-xs font-semibold text-muted-foreground">
-                Category
-              </label>
-              <select
-                id="category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <Field>
+                <FieldLabel htmlFor="icon">Icon Emoji / Character (Optional)</FieldLabel>
+                <Input
+                  id="icon"
+                  value={icon}
+                  onChange={(e) => setIcon(e.target.value)}
+                  placeholder="🤢"
+                />
+              </Field>
 
-            <div className="grid gap-1.5">
-              <label htmlFor="icon" className="text-xs font-semibold text-muted-foreground">
-                Icon Emoji / Character (Optional)
-              </label>
-              <Input
-                id="icon"
-                value={icon}
-                onChange={(e) => setIcon(e.target.value)}
-                placeholder="🤢"
-              />
-            </div>
+              {message && message.type === 'error' && (
+                <div className="rounded-md bg-destructive/15 p-3 text-xs font-medium text-destructive text-center">
+                  {message.text}
+                </div>
+              )}
 
-            <Button type="submit" className="w-full gap-1 h-9 mt-2" disabled={isPending}>
-              <PlusIcon className="size-4" />
-              {isPending ? 'Adding...' : 'Add Symptom'}
-            </Button>
+              <Field>
+                <Button type="submit" className="w-full gap-1 h-9 mt-2" disabled={isPending}>
+                  <PlusIcon className="size-4" />
+                  {isPending ? 'Adding...' : 'Add Symptom'}
+                </Button>
+              </Field>
+            </FieldGroup>
           </form>
         </CardContent>
       </Card>
