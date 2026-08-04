@@ -97,7 +97,13 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={async () => {
+                const { authClient } = await import("@/lib/auth/client")
+                await authClient.signOut()
+                window.location.href = "/login"
+              }}
+            >
               <LogOutIcon />
               Log out
             </DropdownMenuItem>
