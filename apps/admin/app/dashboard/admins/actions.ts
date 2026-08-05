@@ -4,12 +4,7 @@ import { prisma } from '@ramu/db';
 import { auth } from '@/lib/auth/server';
 import { revalidatePath } from 'next/cache';
 
-export async function addAdminAction(
-  prevState: { error?: string; success?: boolean; timestamp?: number } | null,
-  formData: FormData
-) {
-  void prevState; // silence warning
-
+export async function addAdminAction(payload: { id: string; name: string; email: string; role: string }) {
   try {
     const { data: session } = await auth.getSession();
     if (!session?.user) {
@@ -25,48 +20,32 @@ export async function addAdminAction(
       return { error: 'Only Superadmin can add new admins.' };
     }
 
-    const email = formData.get('email') as string;
-    const name = formData.get('name') as string;
-    const password = formData.get('password') as string;
-    const confirmPassword = formData.get('confirmPassword') as string;
-    const role = formData.get('role') as string;
+    const { id, name, email, role } = payload;
 
-    if (!email || !name || !password || !role) {
+    if (!email || !name || !role || !id) {
       return { error: 'Please provide all required fields.' };
     }
 
-    if (password !== confirmPassword) {
-      return { error: 'Passwords do not match.' };
-    }
-
-    const { error, data } = await auth.signUp.email({
-      email,
-      name,
-      password,
-    });
-
-    if (error || !data) {
-      return { error: error?.message || 'Failed to create account in Auth provider.' };
-    }
-
-    try {
-      await prisma.admin.create({
+    // Buat data Admin di Prisma menggunakan ID dari Auth Provider
+    await prisma.$transaction(async (tx) => {
+      await tx.admin.create({
         data: {
-          id: data.user.id,
+          id: id,
           name: name,
           email: email,
           password_hash: 'neon_managed',
           role: role,
         },
       });
-    } catch (dbError) {
-      console.error('Failed to sync admin user to database:', dbError);
-      return { error: 'Account created in Auth, but failed to sync to local database.' };
-    }
+    });
 
     revalidatePath('/dashboard/admins');
     return { success: true, timestamp: Date.now() };
+
   } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+      return { error: 'An admin with this email already exists.' };
+    }
     console.error('[addAdminAction] Error:', error);
     return {
       error: error instanceof Error ? error.message : 'An unexpected error occurred.',

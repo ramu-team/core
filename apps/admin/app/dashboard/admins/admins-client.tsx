@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useActionState } from 'react';
 import { addAdminAction, deleteAdminAction } from './actions';
+import { authClient } from '@/lib/auth/client';
 import { Button } from '@ramu/ui/components/button';
 import { Input } from '@ramu/ui/components/input';
 import { toast } from 'sonner';
@@ -57,7 +58,6 @@ interface AdminsClientProps {
 
 export default function AdminsClient({ initialAdmins, currentUserId }: AdminsClientProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [state, formAction, isPending] = useActionState(addAdminAction, null);
   const [deleteState, deleteAction] = useActionState(deleteAdminAction, null);
 
   const [name, setName] = useState('');
@@ -65,15 +65,8 @@ export default function AdminsClient({ initialAdmins, currentUserId }: AdminsCli
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState('Operator');
-
-  useEffect(() => {
-    if (state?.success) {
-      toast.success('Successfully added new admin.', {
-        description: 'Note: Creating a new user via Auth SDK might overwrite your session cookie. If you experience issues, please logout and login again.'
-      });
-      setIsSheetOpen(false);
-    }
-  }, [state?.timestamp, state?.success]);
+  const [isPending, setIsPending] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (deleteState?.success) toast.success('Admin deleted successfully.');
@@ -86,7 +79,54 @@ export default function AdminsClient({ initialAdmins, currentUserId }: AdminsCli
     setPassword('');
     setConfirmPassword('');
     setRole('Operator');
+    setErrorMsg('');
     setIsSheetOpen(true);
+  };
+
+  const handleCreateAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+
+    if (password !== confirmPassword) {
+      setErrorMsg('Passwords do not match.');
+      return;
+    }
+
+    setIsPending(true);
+    try {
+      const { data, error } = await authClient.admin.createUser({
+        email,
+        password,
+        name,
+        role: (role.toLowerCase() === 'superadmin' ? 'admin' : 'user') as "admin" | "user",
+      });
+
+      if (error || !data) {
+        setErrorMsg(error?.message || 'Failed to create user in Auth provider.');
+        setIsPending(false);
+        return;
+      }
+
+      // Sync with our database
+      const syncResult = await addAdminAction({
+        id: data.user.id,
+        name,
+        email,
+        role,
+      });
+
+      if (syncResult?.error) {
+        setErrorMsg(syncResult.error);
+        setIsPending(false);
+        return;
+      }
+
+      toast.success('Admin created successfully');
+      setIsSheetOpen(false);
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'An unexpected error occurred.');
+    }
+    setIsPending(false);
   };
 
   const columns: ColumnDef<Admin>[] = [
@@ -203,7 +243,7 @@ export default function AdminsClient({ initialAdmins, currentUserId }: AdminsCli
               Create a new administrator account. The user will be able to login immediately.
             </SheetDescription>
           </SheetHeader>
-          <form action={formAction} className="flex flex-col gap-6 px-6 pb-6">
+          <form onSubmit={handleCreateAdmin} className="flex flex-col gap-6 px-6 pb-6">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <Input id="name" name="name" value={name} onChange={e => setName(e.target.value)} required />
@@ -225,7 +265,6 @@ export default function AdminsClient({ initialAdmins, currentUserId }: AdminsCli
                   <SelectItem value="Superadmin">Superadmin</SelectItem>
                 </SelectContent>
               </Select>
-              <input type="hidden" name="role" value={role} />
             </div>
 
             <div className="space-y-2">
@@ -238,9 +277,9 @@ export default function AdminsClient({ initialAdmins, currentUserId }: AdminsCli
               <Input id="confirmPassword" name="confirmPassword" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required minLength={6} />
             </div>
 
-            {state?.error && (
+            {errorMsg && (
               <div className="rounded-md bg-destructive/15 p-3 text-sm font-medium text-destructive text-center">
-                {state.error}
+                {errorMsg}
               </div>
             )}
 
