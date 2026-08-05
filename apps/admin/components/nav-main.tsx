@@ -18,30 +18,35 @@ import {
 import { ChevronRightIcon } from "lucide-react"
 
 export function NavMain({
-  items,
+  groups,
 }: {
-  items: {
+  groups: {
     title: string
-    url: string
-    icon?: React.ReactNode
-    isActive?: boolean
-    items?: {
+    items: {
       title: string
       url: string
+      icon?: React.ReactNode
+      isActive?: boolean
+      items?: {
+        title: string
+        url: string
+      }[]
     }[]
   }[]
 }) {
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
-      <SidebarMenu>
-        {items.map((item) => {
+    <>
+      {groups.map((group) => (
+        <SidebarGroup key={group.title}>
+          <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
+          <SidebarMenu>
+            {group.items.map((item) => {
           const hasSubItems = item.items && item.items.length > 0
 
           if (!hasSubItems) {
             return (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton tooltip={item.title} render={<a href={item.url} />}>
+                <SidebarMenuButton tooltip={item.title} isActive={item.isActive} render={<a href={item.url} />}>
                   {item.icon}
                   <span>{item.title}</span>
                 </SidebarMenuButton>
@@ -76,8 +81,10 @@ export function NavMain({
               </CollapsibleContent>
             </Collapsible>
           )
-        })}
-      </SidebarMenu>
-    </SidebarGroup>
+            })}
+          </SidebarMenu>
+        </SidebarGroup>
+      ))}
+    </>
   )
 }

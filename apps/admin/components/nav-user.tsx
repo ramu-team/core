@@ -18,10 +18,7 @@ import {
 } from "@ramu/ui/components/sidebar"
 import {
   ChevronsUpDownIcon,
-  SparklesIcon,
   BadgeCheckIcon,
-  CreditCardIcon,
-  BellIcon,
   LogOutIcon,
 } from "lucide-react"
 
@@ -76,24 +73,9 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <SparklesIcon />
-                Upgrade to Pro
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { window.location.href = "/dashboard/profile" }}>
                 <BadgeCheckIcon />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCardIcon />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <BellIcon />
-                Notifications
+                Account Settings
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

@@ -1,8 +1,9 @@
-import { Geist, Geist_Mono, Inter } from "next/font/google"
+import { Geist_Mono, Inter } from "next/font/google"
 
 import "@ramu/ui/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@ramu/ui/components/tooltip"
+import { Toaster } from "@ramu/ui/components/sonner"
 import { cn } from "@ramu/ui/lib/utils"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
@@ -31,6 +32,7 @@ export default function RootLayout({
       <body>
         <ThemeProvider>
           <TooltipProvider>{children}</TooltipProvider>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
