@@ -19,6 +19,8 @@ const pathMap: Record<string, string> = {
   "/dashboard/symptoms": "Symptom Options",
   "/dashboard/orders": "Order History",
   "/dashboard/sessions": "User Sessions",
+  "/dashboard/admins": "Admins Management",
+  "/dashboard/profile": "Profile Settings",
 }
 
 export function AppBreadcrumb() {

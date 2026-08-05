@@ -195,7 +195,7 @@ export default function MenuClient({ initialMenus, ingredientsList }: MenuClient
             <input type="hidden" name="status" value={(!isActive).toString()} />
             <button
               type="submit"
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${isActive ? 'bg-primary' : 'bg-muted-foreground/30'}`}
+              className={`relative inline-flex h-6 w-11 cursor-pointer items-center rounded-full transition-colors focus:outline-none ${isActive ? 'bg-primary' : 'bg-muted-foreground/30'}`}
             >
               <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${isActive ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>

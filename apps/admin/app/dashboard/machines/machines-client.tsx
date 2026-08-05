@@ -287,11 +287,11 @@ export default function MachinesClient({ initialMachines, initialCodes }: Machin
             <div className="space-y-2">
               <Label htmlFor="locationName" className="text-sm font-semibold">Location Name</Label>
               <Input
-                id="locationName"
-                name="locationName"
+                id="location_name"
+                name="location_name"
                 value={locationName}
                 onChange={(e) => setLocationName(e.target.value)}
-                placeholder="e.g. Lobby Gedung A"
+                placeholder="e.g. Building A Lobby"
                 className="h-10"
               />
             </div>

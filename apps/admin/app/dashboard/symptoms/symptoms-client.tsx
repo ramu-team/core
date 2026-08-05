@@ -90,7 +90,7 @@ export default function SymptomsClient({ initialSymptoms }: SymptomsClientProps)
   const handleOpenCreate = () => {
     setEditingId(null);
     setName('');
-    setCategory('Daya Tahan Tubuh');
+    setCategory('Immunity');
     setIcon('');
     setIsSheetOpen(true);
   };
@@ -129,7 +129,7 @@ export default function SymptomsClient({ initialSymptoms }: SymptomsClientProps)
             <input type="hidden" name="status" value={(!isActive).toString()} />
             <button
               type="submit"
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${isActive ? 'bg-primary' : 'bg-muted-foreground/30'}`}
+              className={`relative inline-flex h-6 w-11 cursor-pointer items-center rounded-full transition-colors focus:outline-none ${isActive ? 'bg-primary' : 'bg-muted-foreground/30'}`}
             >
               <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${isActive ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
@@ -254,7 +254,7 @@ export default function SymptomsClient({ initialSymptoms }: SymptomsClientProps)
                 name="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Sakit Kepala, Batuk"
+                placeholder="e.g. Headache, Cough"
                 required
                 className="h-10"
               />
