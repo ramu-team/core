@@ -26,7 +26,7 @@ export async function addAdminAction(payload: { id: string; name: string; email:
       return { error: 'Please provide all required fields.' };
     }
 
-    // Buat data Admin di Prisma menggunakan ID dari Auth Provider
+    // Create Admin data in Prisma using the ID from the Auth Provider
     await prisma.$transaction(async (tx) => {
       await tx.admin.create({
         data: {

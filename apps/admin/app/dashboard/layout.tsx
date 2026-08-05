@@ -21,12 +21,12 @@ export default async function DashboardLayout({
     redirect("/login")
   }
 
-  // Fetch admin profile dari database
+  // Fetch admin profile from the database
   let admin = await prisma.admin.findUnique({
     where: { id: session.user.id },
   })
 
-  // Jika admin belum tersinkronisasi di database lokal, buat datanya secara otomatis
+  // If the admin is not synchronized in the local database, create it automatically
   if (!admin) {
     try {
       admin = await prisma.admin.create({

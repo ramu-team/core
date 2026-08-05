@@ -7,8 +7,8 @@ const handler = auth.middleware({
 });
 
 export async function proxy(request: NextRequest) {
-  // Bypas middleware untuk Next.js Server Actions
-  // Server Action sudah memvalidasi auth.getSession() di dalam fungsinya masing-masing
+  // Bypass middleware for Next.js Server Actions
+  // Server Actions already validate auth.getSession() within their respective functions
   if (request.method === 'POST' && request.headers.has('next-action')) {
     return NextResponse.next();
   }

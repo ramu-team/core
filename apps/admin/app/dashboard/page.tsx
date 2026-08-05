@@ -36,7 +36,7 @@ export default async function DashboardPage() {
       _sum: { total_price: true },
     }),
     prisma.machineStock.findMany({
-      where: { current_volume: { lte: 200 } }, // Volume <= 200ml dianggap tipis
+      where: { current_volume: { lte: 200 } }, // Volume <= 200ml is considered low
       include: {
         machine: true,
         ingredient: true,
