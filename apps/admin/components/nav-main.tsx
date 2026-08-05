@@ -16,6 +16,7 @@ import {
   SidebarMenuSubItem,
 } from "@ramu/ui/components/sidebar"
 import { ChevronRightIcon } from "lucide-react"
+import Link from "next/link"
 
 export function NavMain({
   groups,
@@ -46,7 +47,7 @@ export function NavMain({
           if (!hasSubItems) {
             return (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton tooltip={item.title} isActive={item.isActive} render={<a href={item.url} />}>
+                <SidebarMenuButton tooltip={item.title} isActive={item.isActive} render={<Link href={item.url} />}>
                   {item.icon}
                   <span>{item.title}</span>
                 </SidebarMenuButton>
@@ -72,7 +73,7 @@ export function NavMain({
                 <SidebarMenuSub>
                   {item.items?.map((subItem) => (
                     <SidebarMenuSubItem key={subItem.title}>
-                      <SidebarMenuSubButton render={<a href={subItem.url} />}>
+                      <SidebarMenuSubButton render={<Link href={subItem.url} />}>
                         <span>{subItem.title}</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>

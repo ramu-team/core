@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@ramu/ui/components/tooltip"
 import { Toaster } from "@ramu/ui/components/sonner"
 import { cn } from "@ramu/ui/lib/utils"
+import NextTopLoader from 'nextjs-toploader'
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -38,6 +39,7 @@ export default function RootLayout({
       )}
     >
       <body>
+        <NextTopLoader color="#d97706" showSpinner={false} />
         <ThemeProvider>
           <TooltipProvider>{children}</TooltipProvider>
           <Toaster />

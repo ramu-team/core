@@ -21,6 +21,8 @@ import {
   BadgeCheckIcon,
   LogOutIcon,
 } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 export function NavUser({
   user,
@@ -32,6 +34,7 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const router = useRouter()
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -73,17 +76,31 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => { window.location.href = "/dashboard/profile" }}>
+              <DropdownMenuItem onClick={() => { router.push("/dashboard/profile") }}>
                 <BadgeCheckIcon />
                 Account Settings
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={async () => {
-                const { authClient } = await import("@/lib/auth/client")
-                await authClient.signOut()
-                window.location.href = "/login"
+              onClick={() => {
+                toast.promise(
+                  new Promise(async (resolve, reject) => {
+                    try {
+                      const { authClient } = await import("@/lib/auth/client")
+                      await authClient.signOut()
+                      resolve("Logout sukses!")
+                      router.push("/login")
+                    } catch (err) {
+                      reject(new Error("Gagal logout."))
+                    }
+                  }),
+                  {
+                    loading: "Keluar dari akun...",
+                    success: "Berhasil logout!",
+                    error: (err) => err.message,
+                  }
+                )
               }}
             >
               <LogOutIcon />
