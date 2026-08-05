@@ -41,6 +41,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
+  SelectValue,
 } from "@ramu/ui/components/select"
 
 interface Symptom {
@@ -261,7 +262,7 @@ export default function SymptomsClient({ initialSymptoms }: SymptomsClientProps)
 
             <div className="space-y-2">
               <Label htmlFor="category" className="text-sm font-semibold">Category</Label>
-              <Select value={category} onValueChange={setCategory}>
+              <Select value={category} onValueChange={(val) => val && setCategory(val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
