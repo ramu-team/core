@@ -7,10 +7,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 datasource db {
   provider = "postgresql"
 }
+
 // ==========================================
 // 1. MANAJEMEN AKUN & AKSES
 // ==========================================
@@ -38,7 +38,7 @@ model User {
 
 model Admin {
   id            String    @id @default(uuid())
-  nama_admin    String
+  name          String
   email         String    @unique
   password_hash String
   role          String // Misal: Superadmin, Operator
@@ -85,8 +85,8 @@ model MachineActivationCode {
 
 model Ingredient {
   id         String @id @default(uuid())
-  nama_bahan String
-  satuan     String // Contoh: ml
+  name   String
+  unit   String // Contoh: ml
 
   recipes Recipe[]
   stocks  MachineStock[]
@@ -94,10 +94,10 @@ model Ingredient {
 
 model Menu {
   id           String  @id @default(uuid())
-  nama_jamu    String
-  deskripsi    String?
-  harga        Decimal
-  status_aktif Boolean @default(true)
+  name         String
+  description  String?
+  price        Decimal
+  isActive     Boolean @default(true)
 
   recipes        Recipe[]
   orders         Order[]
@@ -106,7 +106,7 @@ model Menu {
 
 model Recipe {
   id         String @id @default(uuid())
-  takaran_ml Float
+  amountMl   Float
 
   menu_id String
   menu    Menu   @relation(fields: [menu_id], references: [id])
@@ -117,7 +117,7 @@ model Recipe {
 
 model MachineStock {
   id             String @id @default(uuid())
-  nomor_tangki   Int // Posisi pompa di mesin IoT
+  tankNumber     Int // Posisi pompa di mesin IoT
   current_volume Float // Sisa cairan aktual
   max_capacity   Float
 
@@ -134,17 +134,17 @@ model MachineStock {
 
 model SymptomOption {
   id           String  @id @default(uuid())
-  kategori     String // Kondisi Umum, Rasa Sakit, Pencernaan
-  nama_gejala  String
-  ikon         String? // Class ikon untuk UI Kiosk/HP
-  status_aktif Boolean @default(true)
+  category     String // Kondisi Umum, Rasa Sakit, Pencernaan
+  name         String
+  icon         String? // Class ikon untuk UI Kiosk/HP
+  isActive     Boolean @default(true)
 }
 
 model ConsultationHistory {
   id                String   @id @default(uuid())
   selected_symptoms Json? // Simpan array gejala, cth: ["Mual", "Pusing"]
-  keluhan_teks      String? // Input manual chat dari HP
-  ai_custom_recipe  Json? // Format resep baru AI: {"ingredient_id": takaran_ml}
+  complaintText     String? // Input manual chat dari HP
+  aiCustomRecipe    Json? // Format resep baru AI: {"ingredient_id": takaran_ml}
   createdAt         DateTime @default(now())
 
   user_id String
@@ -153,8 +153,8 @@ model ConsultationHistory {
   machine_id String
   machine    Machine @relation(fields: [machine_id], references: [id])
 
-  rekomendasi_menu_id String?
-  rekomendasi_menu    Menu?   @relation(fields: [rekomendasi_menu_id], references: [id])
+  recommendedMenuId String?
+  rekomendasi_menu    Menu?   @relation(fields: [recommendedMenuId], references: [id])
 
   Order Order[]
 }
