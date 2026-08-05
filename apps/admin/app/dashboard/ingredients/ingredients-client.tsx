@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
-import { createIngredientAction } from './actions';
+import React, { useState, useEffect, useActionState } from 'react';
+import { saveIngredientAction } from './actions';
 import { Button } from '@ramu/ui/components/button';
 import { Input } from '@ramu/ui/components/input';
+import { toast } from 'sonner';
 import {
   Card,
   CardContent,
@@ -11,140 +12,176 @@ import {
   CardHeader,
   CardTitle,
 } from '@ramu/ui/components/card';
-import { FlaskConicalIcon, PlusIcon } from 'lucide-react';
+import { Label } from '@ramu/ui/components/label';
+import { PlusIcon, Edit3Icon } from 'lucide-react';
+import { ColumnDef } from "@tanstack/react-table"
+import { DataTable } from "@/components/ui/data-table"
+import { DataTableToolbar } from "@/components/ui/data-table-toolbar"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@ramu/ui/components/sheet"
 
 interface Ingredient {
   id: string;
-  nama_bahan: string;
-  satuan: string;
+  name: string;
+  unit: string;
 }
 
 interface IngredientsClientProps {
   initialIngredients: Ingredient[];
 }
 
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from '@ramu/ui/components/field';
-
 export default function IngredientsClient({ initialIngredients }: IngredientsClientProps) {
-  const [isPending, startTransition] = useTransition();
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  
   const [name, setName] = useState('');
   const [unit, setUnit] = useState('ml');
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setMessage(null);
+  const [state, formAction, isPending] = useActionState(saveIngredientAction, null);
 
-    startTransition(async () => {
-      const res = await createIngredientAction(name, unit);
-      if (res.error) {
-        setMessage({ type: 'error', text: res.error });
-      } else {
-        setMessage({ type: 'success', text: `Successfully added ingredient: ${name}` });
-        setName('');
-      }
-    });
+  useEffect(() => {
+    if (state?.success) {
+      toast.success(`Successfully ${editingId ? 'updated' : 'added'} ingredient: ${name}`);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsSheetOpen(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state?.timestamp]); // Trigger on every success timestamp change
+
+  const handleOpenCreate = () => {
+    setEditingId(null);
+    setName('');
+    setUnit('ml');
+    setIsSheetOpen(true);
   };
 
+  const handleOpenEdit = (ingredient: Ingredient) => {
+    setEditingId(ingredient.id);
+    setName(ingredient.name);
+    setUnit(ingredient.unit);
+    setIsSheetOpen(true);
+  };
+
+  const columns: ColumnDef<Ingredient>[] = [
+    {
+      accessorKey: "id",
+      header: "Ingredient ID",
+      cell: ({ row }) => <span className="font-mono text-xs text-muted-foreground uppercase">{row.original.id.split("-")[0]}</span>,
+    },
+    {
+      accessorKey: "name",
+      header: "Ingredient Name",
+      cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+    },
+    {
+      accessorKey: "unit",
+      header: () => <div className="text-right">Unit</div>,
+      cell: ({ row }) => <div className="text-right font-mono text-xs font-semibold">{row.original.unit}</div>,
+    },
+    {
+      id: "actions",
+      header: () => <div className="text-right">Actions</div>,
+      cell: ({ row }) => (
+        <div className="text-right">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 w-7 text-muted-foreground hover:text-amber-500 transition-colors p-0"
+            onClick={() => handleOpenEdit(row.original)}
+          >
+            <Edit3Icon className="size-3.5" />
+          </Button>
+        </div>
+      ),
+    }
+  ]
+
   return (
-    <div className="grid gap-6 md:grid-cols-3">
+    <div className="grid gap-6">
+
       {/* Ingredients List */}
-      <Card className="md:col-span-2">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FlaskConicalIcon className="size-5 text-amber-500" />
-            Raw Ingredients
-          </CardTitle>
-          <CardDescription>
-            List of liquid base raw ingredients configured in the system.
-          </CardDescription>
+      <Card>
+        <CardHeader className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+          <div className="flex flex-col gap-1.5 shrink-0">
+            <CardTitle className="text-xl">Available Ingredients</CardTitle>
+            <CardDescription>
+              Manage raw ingredients available for Jamu recipes.
+            </CardDescription>
+          </div>
+
+          <div className="w-full xl:w-auto xl:ml-auto">
+            <DataTableToolbar 
+              searchKey="search"
+              searchPlaceholder="Search ingredient name..."
+            >
+              <Button onClick={handleOpenCreate} className="w-full sm:w-auto shadow-sm">
+                <PlusIcon className="mr-2 size-4" /> Add Ingredient
+              </Button>
+            </DataTableToolbar>
+          </div>
         </CardHeader>
         <CardContent>
-          {initialIngredients.length === 0 ? (
-            <div className="flex h-[200px] flex-col items-center justify-center text-center text-sm text-muted-foreground">
-              <p>No ingredients configured.</p>
-              <p className="text-xs">Add an ingredient using the form on the right.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-border/40 pb-2 text-muted-foreground font-medium">
-                    <th className="py-2">Ingredient ID</th>
-                    <th className="py-2">Ingredient Name</th>
-                    <th className="py-2 text-right">Measurement Unit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {initialIngredients.map((ingredient) => (
-                    <tr key={ingredient.id} className="border-b border-border/40 last:border-0">
-                      <td className="py-3 font-mono text-xs text-muted-foreground">{ingredient.id}</td>
-                      <td className="py-3 font-medium">{ingredient.nama_bahan}</td>
-                      <td className="py-3 text-right font-mono text-xs">{ingredient.satuan}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <DataTable columns={columns} data={initialIngredients} />
         </CardContent>
       </Card>
 
-      {/* Add Ingredient Form */}
-      <Card className="h-fit">
-        <CardHeader>
-          <CardTitle>Add Ingredient</CardTitle>
-          <CardDescription>Configure a new raw liquid ingredient.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="name">Ingredient Name</FieldLabel>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Ginger, Honey, etc."
-                  required
-                />
-              </Field>
+      {/* Add/Edit Ingredient Sheet */}
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent className="sm:max-w-md w-full">
+          <SheetHeader className="mb-6">
+            <SheetTitle>{editingId ? 'Edit Ingredient' : 'Add Ingredient'}</SheetTitle>
+            <SheetDescription>
+              {editingId ? 'Update the details for this raw liquid ingredient.' : 'Configure a new raw liquid ingredient.'}
+            </SheetDescription>
+          </SheetHeader>
+          <form action={formAction} className="flex flex-col gap-6 px-6 pb-6">
+            {editingId && <input type="hidden" name="id" value={editingId} />}
 
-              <Field>
-                <FieldLabel htmlFor="unit">Measurement Unit</FieldLabel>
-                <Input
-                  id="unit"
-                  value={unit}
-                  onChange={(e) => setUnit(e.target.value)}
-                  placeholder="ml"
-                  required
-                />
-              </Field>
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-semibold">Ingredient Name</Label>
+              <Input
+                id="name"
+                name="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Ginger, Honey"
+                required
+                className="h-10"
+              />
+            </div>
 
-              {message && (
-                <div
-                  className={`rounded-md p-3 text-xs font-medium text-center ${
-                    message.type === 'success' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-destructive/10 text-destructive'
-                  }`}
-                >
-                  {message.text}
-                </div>
-              )}
+            <div className="space-y-2">
+              <Label htmlFor="unit" className="text-sm font-semibold">Measurement Unit</Label>
+              <Input
+                id="unit"
+                name="unit"
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                placeholder="e.g. ml, gr"
+                required
+                className="h-10"
+              />
+            </div>
 
-              <Field>
-                <Button type="submit" className="w-full gap-1 h-9 mt-2" disabled={isPending}>
-                  <PlusIcon className="size-4" />
-                  {isPending ? 'Adding...' : 'Add Ingredient'}
-                </Button>
-              </Field>
-            </FieldGroup>
+            {state?.error && (
+              <div className="rounded-md bg-destructive/15 p-3 text-sm font-medium text-destructive text-center">
+                {state.error}
+              </div>
+            )}
+
+            <div className="pt-4 mt-auto">
+              <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={isPending}>
+                {isPending ? 'Saving...' : (editingId ? 'Save Changes' : 'Add Ingredient')}
+              </Button>
+            </div>
           </form>
-        </CardContent>
-      </Card>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

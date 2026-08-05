@@ -8,12 +8,7 @@ import {
   SidebarTrigger,
 } from "@ramu/ui/components/sidebar"
 import { Separator } from "@ramu/ui/components/separator"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-} from "@ramu/ui/components/breadcrumb"
+import { AppBreadcrumb } from "@/components/app-breadcrumb"
 
 export default async function DashboardLayout({
   children,
@@ -37,7 +32,7 @@ export default async function DashboardLayout({
       admin = await prisma.admin.create({
         data: {
           id: session.user.id,
-          nama_admin: session.user.name || "Admin",
+          name: session.user.name || "Admin",
           email: session.user.email || "admin@ramu.com",
           password_hash: "neon_managed",
           role: "Superadmin",
@@ -49,7 +44,7 @@ export default async function DashboardLayout({
   }
 
   const sidebarUser = {
-    name: admin?.nama_admin || session.user.name,
+    name: admin?.name || session.user.name,
     email: session.user.email,
     avatar: session.user.image,
   }
@@ -58,20 +53,14 @@ export default async function DashboardLayout({
     <SidebarProvider>
       <AppSidebar user={sidebarUser} />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border/40 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
+        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
+          <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
             <Separator
               orientation="vertical"
               className="mr-2 data-vertical:h-4 data-vertical:self-auto"
             />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Dashboard</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+            <AppBreadcrumb />
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-6">
