@@ -41,7 +41,7 @@ export function LoginForm({
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="admin@ramu.id"
                   required
                 />
               </Field>
@@ -73,10 +73,9 @@ export function LoginForm({
           </form>
         </CardContent>
       </Card>
-      <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
-      </FieldDescription>
+      <div className="text-center text-sm text-muted-foreground">
+        Secure administration portal for Ramu Ecosystem
+      </div>
     </div>
   )
 }

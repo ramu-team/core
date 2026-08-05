@@ -3,6 +3,11 @@ import { Prisma } from '@prisma/client';
 import IngredientsClient from './ingredients-client';
 import { FlaskConicalIcon } from 'lucide-react';
 
+export const metadata = {
+  title: "Ingredients",
+}
+
+
 // Force Next.js to dynamically fetch data on each request
 export const dynamic = 'force-dynamic';
 

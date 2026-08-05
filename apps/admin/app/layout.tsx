@@ -13,6 +13,14 @@ const fontMono = Geist_Mono({
   variable: "--font-mono",
 })
 
+export const metadata = {
+  title: {
+    template: "%s | Ramu Admin",
+    default: "Ramu Admin Dashboard",
+  },
+  description: "Administrator dashboard for Ramu ecosystem.",
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{

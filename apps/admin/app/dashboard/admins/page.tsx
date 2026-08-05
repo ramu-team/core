@@ -5,6 +5,11 @@ import { redirect } from 'next/navigation';
 import AdminsClient from './admins-client';
 import { ShieldAlertIcon } from 'lucide-react';
 
+export const metadata = {
+  title: "Admins",
+}
+
+
 export const dynamic = 'force-dynamic';
 
 export default async function AdminsPage(props: {

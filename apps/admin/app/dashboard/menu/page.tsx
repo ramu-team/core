@@ -4,6 +4,11 @@ import MenuClient from './menu-client';
 
 import { CupSodaIcon } from 'lucide-react';
 
+export const metadata = {
+  title: "Menu",
+}
+
+
 // Force Next.js to dynamically fetch data on each request
 export const dynamic = 'force-dynamic';
 

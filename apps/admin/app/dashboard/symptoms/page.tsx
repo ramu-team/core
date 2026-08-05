@@ -3,6 +3,11 @@ import { Prisma } from '@prisma/client';
 import SymptomsClient from './symptoms-client';
 import { ActivityIcon } from 'lucide-react';
 
+export const metadata = {
+  title: "Symptoms",
+}
+
+
 // Force Next.js to dynamically fetch data on each request
 export const dynamic = 'force-dynamic';
 

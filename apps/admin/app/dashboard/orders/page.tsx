@@ -9,6 +9,11 @@ import {
 import { ShoppingCartIcon } from "lucide-react"
 import { OrdersClient } from "./orders-client"
 
+export const metadata = {
+  title: "Orders",
+}
+
+
 export const dynamic = "force-dynamic"
 
 export default async function OrdersPage() {

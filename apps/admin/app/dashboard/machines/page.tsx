@@ -3,6 +3,11 @@ import { Prisma } from '@prisma/client';
 import MachinesClient from './machines-client';
 import { CpuIcon } from 'lucide-react';
 
+export const metadata = {
+  title: "Machines",
+}
+
+
 // Force Next.js to dynamically fetch data on each request
 export const dynamic = 'force-dynamic';
 

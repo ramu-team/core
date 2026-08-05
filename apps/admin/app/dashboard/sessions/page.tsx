@@ -11,6 +11,11 @@ import { UsersIcon } from "lucide-react"
 import { SessionsClient } from "./sessions-client"
 import { DataTableToolbar } from "@/components/ui/data-table-toolbar"
 
+export const metadata = {
+  title: "Sessions",
+}
+
+
 export const dynamic = "force-dynamic"
 
 export default async function SessionsPage(props: {
