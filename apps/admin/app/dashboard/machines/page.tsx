@@ -1,18 +1,50 @@
 import { prisma } from '@ramu/db';
+import { Prisma } from '@prisma/client';
 import MachinesClient from './machines-client';
+import { CpuIcon } from 'lucide-react';
 
 // Force Next.js to dynamically fetch data on each request
 export const dynamic = 'force-dynamic';
 
-export default async function MachinesPage() {
+export default async function MachinesPage(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  // Clean up expired codes
+  await prisma.machineActivationCode.deleteMany({
+    where: {
+      is_used: false,
+      expires_at: { lt: new Date() },
+    },
+  });
+
+  const searchParams = await props.searchParams;
+  const search = typeof searchParams?.search === 'string' ? searchParams.search : undefined;
+  const status = typeof searchParams?.status === 'string' ? searchParams.status : undefined;
+  const is_registered = typeof searchParams?.is_registered === 'string' ? searchParams.is_registered : undefined;
+
+  const where: Prisma.MachineWhereInput = {};
+  if (search) {
+    where.OR = [
+      { registration_code: { contains: search, mode: 'insensitive' } },
+      { location_name: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+  if (status) {
+    where.status = status;
+  }
+  if (is_registered !== undefined) {
+    where.is_registered = is_registered === 'true';
+  }
+
   const [machines, codes] = await Promise.all([
     prisma.machine.findMany({
+      where,
       orderBy: { registration_code: 'asc' },
     }),
     prisma.machineActivationCode.findMany({
       include: {
         generated_by: {
-          select: { nama_admin: true },
+          select: { name: true },
         },
         used_by_machine: {
           select: { registration_code: true },
@@ -24,10 +56,12 @@ export default async function MachinesPage() {
   ]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Mesin IoT</h1>
-        <p className="text-muted-foreground">
+    <div className="flex flex-col gap-8 p-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent flex items-center gap-3">
+          <CpuIcon className="size-8 text-primary" /> IoT Machines
+        </h1>
+        <p className="text-muted-foreground text-sm font-medium">
           Monitor your IoT dispensers, update locations, and generate codes for machine setup.
         </p>
       </div>

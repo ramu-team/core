@@ -4,113 +4,126 @@ import { prisma } from '@ramu/db';
 import { auth } from '@/lib/auth/server';
 import { revalidatePath } from 'next/cache';
 
-interface RecipeItem {
-  ingredientId: string;
-  ml: number;
-}
-
-export async function createMenuAction(
-  name: string,
-  description: string,
-  price: number,
-  recipeItems: RecipeItem[]
+export async function saveMenuAction(
+  prevState: { error?: string; success?: boolean; timestamp?: number } | null,
+  formData: FormData
 ) {
-  const { data: session } = await auth.getSession();
-
-  if (!session?.user) {
-    return { error: 'Unauthorized.' };
-  }
-
-  if (!name || !price) {
-    return { error: 'Please enter a name and price.' };
-  }
-
-  if (!recipeItems || recipeItems.length === 0) {
-    return { error: 'Please configure at least one ingredient for the recipe.' };
-  }
-
+  void prevState;
   try {
-    // Jalankan transaksi database
-    const newMenu = await prisma.$transaction(async (tx) => {
-      // 1. Buat record Menu baru
-      const menu = await tx.menu.create({
-        data: {
-          nama_jamu: name,
-          deskripsi: description,
-          harga: price,
-          status_aktif: true,
-        },
+    const id = formData.get('id') as string | null;
+    const name = (formData.get('name') as string)?.trim();
+    const description = (formData.get('description') as string)?.trim() || '';
+    const priceRaw = formData.get('price') as string;
+    const recipesStr = formData.get('recipes') as string;
+
+    const { data: session } = await auth.getSession();
+    if (!session?.user) {
+      return { error: 'Unauthorized. Please login first.' };
+    }
+
+    if (!name) {
+      return { error: 'Please enter a name.' };
+    }
+
+    const price = parseFloat(priceRaw);
+    if (isNaN(price) || price <= 0) {
+      return { error: 'Please enter a valid price.' };
+    }
+
+    let recipes: { ingredientId: string; ml: number }[] = [];
+    try {
+      recipes = JSON.parse(recipesStr);
+    } catch {
+      return { error: 'Invalid recipe data. Please try again.' };
+    }
+
+    if (!recipes || recipes.length === 0) {
+      return { error: 'Please configure at least one ingredient for the recipe.' };
+    }
+
+    if (id) {
+      await prisma.$transaction(async (tx) => {
+        await tx.menu.update({
+          where: { id },
+          data: { name: name, description: description, price: price },
+        });
+        await tx.recipe.deleteMany({ where: { menu_id: id } });
+        await Promise.all(
+          recipes.map((item) =>
+            tx.recipe.create({
+              data: { menu_id: id, ingredient_id: item.ingredientId, amountMl: item.ml },
+            })
+          )
+        );
       });
-
-      // 2. Buat record Recipe untuk setiap bahan baku terpilih
-      await Promise.all(
-        recipeItems.map((item) =>
-          tx.recipe.create({
-            data: {
-              menu_id: menu.id,
-              ingredient_id: item.ingredientId,
-              takaran_ml: item.ml,
-            },
-          })
-        )
-      );
-
-      return menu;
-    });
+    } else {
+      await prisma.$transaction(async (tx) => {
+        const menu = await tx.menu.create({
+          data: { name: name, description: description, price: price, isActive: true },
+        });
+        await Promise.all(
+          recipes.map((item) =>
+            tx.recipe.create({
+              data: { menu_id: menu.id, ingredient_id: item.ingredientId, amountMl: item.ml },
+            })
+          )
+        );
+      });
+    }
 
     revalidatePath('/dashboard/menu');
-    return { success: true, data: newMenu };
-  } catch (error: any) {
-    console.error('Error creating Jamu menu:', error);
-    return { error: error.message || 'Failed to create Jamu menu.' };
+    return { success: true, timestamp: Date.now() };
+  } catch (error: unknown) {
+    console.error('[saveMenuAction] Error:', error);
+    return { error: error instanceof Error ? error.message : 'An unexpected error occurred.' };
   }
 }
 
-export async function toggleMenuStatusAction(menuId: string, active: boolean) {
-  const { data: session } = await auth.getSession();
-
-  if (!session?.user) {
-    return { error: 'Unauthorized.' };
-  }
-
+export async function toggleMenuStatusAction(
+  prevState: { error?: string; success?: boolean; timestamp?: number } | null,
+  formData: FormData
+) {
+  void prevState;
   try {
-    await prisma.menu.update({
-      where: { id: menuId },
-      data: { status_aktif: active },
-    });
+    const id = formData.get('id') as string;
+    const status = formData.get('status') === 'true';
 
+    const { data: session } = await auth.getSession();
+    if (!session?.user) {
+      return { error: 'Unauthorized.' };
+    }
+
+    await prisma.menu.update({ where: { id }, data: { isActive: status } });
     revalidatePath('/dashboard/menu');
-    return { success: true };
-  } catch (error: any) {
-    console.error('Error toggling menu status:', error);
-    return { error: error.message || 'Failed to toggle menu status.' };
+    return { success: true, timestamp: Date.now() };
+  } catch (error: unknown) {
+    console.error('[toggleMenuStatusAction] Error:', error);
+    return { error: error instanceof Error ? error.message : 'An unexpected error occurred.' };
   }
 }
 
-export async function deleteMenuAction(menuId: string) {
-  const { data: session } = await auth.getSession();
-
-  if (!session?.user) {
-    return { error: 'Unauthorized.' };
-  }
-
+export async function deleteMenuAction(
+  prevState: { error?: string; success?: boolean; timestamp?: number } | null,
+  formData: FormData
+) {
+  void prevState;
   try {
+    const id = formData.get('id') as string;
+
+    const { data: session } = await auth.getSession();
+    if (!session?.user) {
+      return { error: 'Unauthorized.' };
+    }
+
     await prisma.$transaction(async (tx) => {
-      // Hapus resep terlebih dahulu karena relasi FK
-      await tx.recipe.deleteMany({
-        where: { menu_id: menuId },
-      });
-
-      // Hapus menu
-      await tx.menu.delete({
-        where: { id: menuId },
-      });
+      await tx.recipe.deleteMany({ where: { menu_id: id } });
+      await tx.menu.delete({ where: { id } });
     });
 
     revalidatePath('/dashboard/menu');
-    return { success: true };
-  } catch (error: any) {
-    console.error('Error deleting menu:', error);
-    return { error: error.message || 'Failed to delete menu.' };
+    return { success: true, timestamp: Date.now() };
+  } catch (error: unknown) {
+    console.error('[deleteMenuAction] Error:', error);
+    return { error: error instanceof Error ? error.message : 'An unexpected error occurred.' };
   }
 }

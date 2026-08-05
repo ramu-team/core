@@ -4,83 +4,110 @@ import { prisma } from '@ramu/db';
 import { auth } from '@/lib/auth/server';
 import { revalidatePath } from 'next/cache';
 
-export async function createSymptomAction(name: string, category: string, icon?: string) {
-  const { data: session } = await auth.getSession();
-
-  if (!session?.user) {
-    return { error: 'Unauthorized.' };
-  }
-
-  if (!name || !category) {
-    return { error: 'Please enter a name and category.' };
-  }
-
+export async function saveSymptomAction(
+  prevState: { error?: string; success?: boolean; timestamp?: number } | null,
+  formData: FormData
+) {
+  void prevState;
   try {
-    const existing = await prisma.symptomOption.findFirst({
-      where: {
-        nama_gejala: { equals: name, mode: 'insensitive' },
-        kategori: category,
-      },
-    });
+    const id = formData.get('id') as string | null;
+    const name = (formData.get('name') as string)?.trim();
+    const category = (formData.get('category') as string)?.trim();
+    const icon = (formData.get('icon') as string)?.trim() || null;
 
-    if (existing) {
-      return { error: `Symptom "${name}" already exists in category "${category}".` };
+    const { data: session } = await auth.getSession();
+    if (!session?.user) {
+      return { error: 'Unauthorized. Please login first.' };
     }
 
-    const symptom = await prisma.symptomOption.create({
-      data: {
-        nama_gejala: name,
-        kategori: category,
-        ikon: icon || null,
-        status_aktif: true,
-      },
-    });
+    if (!name || !category) {
+      return { error: 'Please enter a name and category.' };
+    }
+
+    if (id) {
+      const existing = await prisma.symptomOption.findFirst({
+        where: {
+          name: { equals: name, mode: 'insensitive' },
+          category: category,
+          NOT: { id },
+        },
+      });
+      if (existing) {
+        return { error: `Symptom "${name}" already exists in this category.` };
+      }
+      await prisma.symptomOption.update({
+        where: { id },
+        data: { name: name, category: category, icon: icon },
+      });
+    } else {
+      const existing = await prisma.symptomOption.findFirst({
+        where: {
+          name: { equals: name, mode: 'insensitive' },
+          category: category,
+        },
+      });
+      if (existing) {
+        return { error: `Symptom "${name}" already exists in this category.` };
+      }
+      await prisma.symptomOption.create({
+        data: { name: name, category: category, icon: icon, isActive: true },
+      });
+    }
 
     revalidatePath('/dashboard/symptoms');
-    return { success: true, data: symptom };
-  } catch (error: any) {
-    console.error('Error creating symptom option:', error);
-    return { error: error.message || 'Failed to create symptom.' };
+    return { success: true, timestamp: Date.now() };
+  } catch (error: unknown) {
+    console.error('[saveSymptomAction] Error:', error);
+    return { error: error instanceof Error ? error.message : 'An unexpected error occurred.' };
   }
 }
 
-export async function toggleSymptomStatusAction(symptomId: string, active: boolean) {
-  const { data: session } = await auth.getSession();
-
-  if (!session?.user) {
-    return { error: 'Unauthorized.' };
-  }
-
+export async function toggleSymptomStatusAction(
+  prevState: { error?: string; success?: boolean; timestamp?: number } | null,
+  formData: FormData
+) {
+  void prevState;
   try {
+    const id = formData.get('id') as string;
+    const status = formData.get('status') === 'true';
+
+    const { data: session } = await auth.getSession();
+    if (!session?.user) {
+      return { error: 'Unauthorized.' };
+    }
+
     await prisma.symptomOption.update({
-      where: { id: symptomId },
-      data: { status_aktif: active },
+      where: { id },
+      data: { isActive: status },
     });
 
     revalidatePath('/dashboard/symptoms');
-    return { success: true };
-  } catch (error: any) {
-    console.error('Error toggling symptom status:', error);
-    return { error: error.message || 'Failed to toggle status.' };
+    return { success: true, timestamp: Date.now() };
+  } catch (error: unknown) {
+    console.error('[toggleSymptomStatusAction] Error:', error);
+    return { error: error instanceof Error ? error.message : 'An unexpected error occurred.' };
   }
 }
 
-export async function deleteSymptomAction(symptomId: string) {
-  const { data: session } = await auth.getSession();
-
-  if (!session?.user) {
-    return { error: 'Unauthorized.' };
-  }
-
+export async function deleteSymptomAction(
+  prevState: { error?: string; success?: boolean; timestamp?: number } | null,
+  formData: FormData
+) {
+  void prevState;
   try {
-    await prisma.symptomOption.delete({
-      where: { id: symptomId },
-    });
+    const id = formData.get('id') as string;
+
+    const { data: session } = await auth.getSession();
+    if (!session?.user) {
+      return { error: 'Unauthorized.' };
+    }
+
+    await prisma.symptomOption.delete({ where: { id } });
 
     revalidatePath('/dashboard/symptoms');
-    return { success: true };
-  } catch (error: any) {
-    console.error('Error deleting symptom:', error);
-    return { error: error.message || 'Failed to delete symptom.' };
+    return { success: true, timestamp: Date.now() };
+  } catch (error: unknown) {
+    console.error('[deleteSymptomAction] Error:', error);
+    return { error: error instanceof Error ? error.message : 'An unexpected error occurred.' };
   }
 }
