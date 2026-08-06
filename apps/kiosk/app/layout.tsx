@@ -4,6 +4,7 @@ import "@ramu/ui/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@ramu/ui/lib/utils"
 import NextTopLoader from 'nextjs-toploader'
+import { KioskWrapper } from "@/components/kiosk-wrapper"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -28,9 +29,13 @@ export default function RootLayout({
         inter.variable
       )}
     >
-      <body>
-        <NextTopLoader color="#d97706" showSpinner={false} />
-        <ThemeProvider>{children}</ThemeProvider>
+      <body className="bg-stone-950 text-stone-50 overflow-hidden">
+        <NextTopLoader color="#f59e0b" showSpinner={false} />
+        <ThemeProvider defaultTheme="dark">
+          <KioskWrapper>
+            {children}
+          </KioskWrapper>
+        </ThemeProvider>
       </body>
     </html>
   )
