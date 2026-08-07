@@ -4,7 +4,7 @@ import { prisma } from '@ramu/db'
 
 export async function activateMachineAction(activationCode: string) {
   try {
-    // 1. Cari kode aktivasi
+    // 1. Find activation code
     const codeRecord = await prisma.machineActivationCode.findUnique({
       where: { activation_code: activationCode },
     });
@@ -21,16 +21,16 @@ export async function activateMachineAction(activationCode: string) {
       return { error: 'Kode aktivasi ini sudah kedaluwarsa.' };
     }
 
-    // 2. Tandai kode terpakai dan buat data Mesin baru
-    // Kita gunakan transaksi agar konsisten
+    // 2. Mark code as used and create new Machine data
+    // We use transaction to ensure consistency
     const machine = await prisma.$transaction(async (tx) => {
-      // Tandai kode terpakai
+      // Mark code as used
       const updatedCode = await tx.machineActivationCode.update({
         where: { id: codeRecord.id },
         data: { is_used: true },
       });
 
-      // Buat mesin baru
+      // Create new machine
       // generate random registration code e.g. RMU-MACHINE-XYZ
       const regCode = `RMU-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
@@ -42,7 +42,7 @@ export async function activateMachineAction(activationCode: string) {
         },
       });
 
-      // Hubungkan kode dengan mesin
+      // Link code with machine
       await tx.machineActivationCode.update({
         where: { id: updatedCode.id },
         data: { used_by_machine_id: newMachine.id },
@@ -60,8 +60,24 @@ export async function activateMachineAction(activationCode: string) {
       } 
     };
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Activation error:', error);
     return { error: 'Terjadi kesalahan sistem saat aktivasi.' };
+  }
+}
+
+export async function deductCupAction(machineId: string) {
+  try {
+    const machine = await prisma.machine.findUnique({ where: { id: machineId } });
+    if (machine && machine.cups_stock > 0) {
+      await prisma.machine.update({
+        where: { id: machineId },
+        data: { cups_stock: { decrement: 1 } }
+      });
+    }
+    return { success: true };
+  } catch (error) {
+    console.error('Deduct cup error:', error);
+    return { error: 'Gagal mengurangi stok cup.' };
   }
 }

@@ -3,6 +3,8 @@
 import { prisma } from '@ramu/db';
 import { auth } from '@/lib/auth/server';
 import { revalidatePath } from 'next/cache';
+import { logAdminAction } from '@/lib/audit';
+import { uploadImageToS3 } from '@/lib/s3';
 
 export async function saveMenuAction(
   prevState: { error?: string; success?: boolean; timestamp?: number } | null,
@@ -15,6 +17,14 @@ export async function saveMenuAction(
     const description = (formData.get('description') as string)?.trim() || '';
     const priceRaw = formData.get('price') as string;
     const recipesStr = formData.get('recipes') as string;
+    
+    // Check for physical file upload
+    const imageFile = formData.get('image_file') as File | null;
+    let finalImageUrl = (formData.get('image_url') as string)?.trim() || null;
+
+    if (imageFile && imageFile.size > 0) {
+      finalImageUrl = await uploadImageToS3(imageFile);
+    }
 
     const { data: session } = await auth.getSession();
     if (!session?.user) {
@@ -45,7 +55,7 @@ export async function saveMenuAction(
       await prisma.$transaction(async (tx) => {
         await tx.menu.update({
           where: { id },
-          data: { name: name, description: description, price: price },
+          data: { name: name, description: description, price: price, image_url: finalImageUrl },
         });
         await tx.recipe.deleteMany({ where: { menu_id: id } });
         await Promise.all(
@@ -59,7 +69,7 @@ export async function saveMenuAction(
     } else {
       await prisma.$transaction(async (tx) => {
         const menu = await tx.menu.create({
-          data: { name: name, description: description, price: price, isActive: true },
+          data: { name: name, description: description, price: price, isActive: true, image_url: finalImageUrl },
         });
         await Promise.all(
           recipes.map((item) =>
@@ -70,6 +80,14 @@ export async function saveMenuAction(
         );
       });
     }
+
+    await logAdminAction({
+      adminId: session.user.id,
+      action: id ? 'UPDATE_MENU' : 'CREATE_MENU',
+      entity: 'Menu',
+      entityId: id || undefined,
+      details: { name, price, image_url: finalImageUrl },
+    });
 
     revalidatePath('/dashboard/menu');
     return { success: true, timestamp: Date.now() };
@@ -94,6 +112,15 @@ export async function toggleMenuStatusAction(
     }
 
     await prisma.menu.update({ where: { id }, data: { isActive: status } });
+    
+    await logAdminAction({
+      adminId: session.user.id,
+      action: 'TOGGLE_MENU_STATUS',
+      entity: 'Menu',
+      entityId: id,
+      details: { isActive: status },
+    });
+
     revalidatePath('/dashboard/menu');
     return { success: true, timestamp: Date.now() };
   } catch (error: unknown) {
@@ -118,6 +145,13 @@ export async function deleteMenuAction(
     await prisma.$transaction(async (tx) => {
       await tx.recipe.deleteMany({ where: { menu_id: id } });
       await tx.menu.delete({ where: { id } });
+    });
+
+    await logAdminAction({
+      adminId: session.user.id,
+      action: 'DELETE_MENU',
+      entity: 'Menu',
+      entityId: id,
     });
 
     revalidatePath('/dashboard/menu');

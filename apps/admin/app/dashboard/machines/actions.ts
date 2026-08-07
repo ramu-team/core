@@ -4,6 +4,7 @@ import { prisma } from '@ramu/db';
 import { auth } from '@/lib/auth/server';
 import { revalidatePath } from 'next/cache';
 import { randomBytes } from 'crypto';
+import { logAdminAction } from '@/lib/audit';
 
 export async function generateActivationCodeAction(
   prevState: { error?: string; success?: boolean; timestamp?: number } | null,
@@ -35,6 +36,13 @@ export async function generateActivationCodeAction(
       },
     });
 
+    await logAdminAction({
+      adminId: admin.id,
+      action: 'GENERATE_ACTIVATION_CODE',
+      entity: 'MachineActivationCode',
+      details: { activation_code: activationCode, expires_at: expiresAt },
+    });
+
     revalidatePath('/dashboard/machines');
     return { success: true, timestamp: Date.now() };
   } catch (error: unknown) {
@@ -50,8 +58,16 @@ export async function saveMachineAction(
   void prevState;
   try {
     const machineId = formData.get('machineId') as string;
-    const locationName = (formData.get('locationName') as string)?.trim() || null;
+    const locationName = (formData.get('location_name') as string)?.trim() || null;
     const status = formData.get('status') as string;
+    const cupsStockRaw = formData.get('cupsStock') as string;
+    const cupsStock = cupsStockRaw ? parseInt(cupsStockRaw, 10) : 0;
+    const tanksRaw = formData.get('tanks') as string;
+
+    let tanksConfig: { tankNumber: number; ingredientId: string; currentVolume: number; maxCapacity: number }[] = [];
+    if (tanksRaw) {
+      try { tanksConfig = JSON.parse(tanksRaw); } catch (e) { console.error('Failed to parse tanks'); }
+    }
 
     const { data: session } = await auth.getSession();
     if (!session?.user) {
@@ -62,9 +78,37 @@ export async function saveMachineAction(
       return { error: 'Machine ID is missing.' };
     }
 
-    await prisma.machine.update({
-      where: { id: machineId },
-      data: { location_name: locationName, status },
+    await prisma.$transaction(async (tx) => {
+      await tx.machine.update({
+        where: { id: machineId },
+        data: { location_name: locationName, status, cups_stock: cupsStock },
+      });
+
+      if (tanksConfig.length > 0) {
+        await tx.machineStock.deleteMany({ where: { machine_id: machineId } });
+        await Promise.all(
+          tanksConfig.map(tank => {
+            if (!tank.ingredientId) return Promise.resolve();
+            return tx.machineStock.create({
+              data: {
+                machine_id: machineId,
+                tankNumber: tank.tankNumber,
+                ingredient_id: tank.ingredientId,
+                current_volume: tank.currentVolume,
+                max_capacity: tank.maxCapacity,
+              },
+            });
+          })
+        );
+      }
+    });
+
+    await logAdminAction({
+      adminId: session.user.id,
+      action: 'UPDATE_MACHINE',
+      entity: 'Machine',
+      entityId: machineId,
+      details: { location_name: locationName, status, cups_stock: cupsStock },
     });
 
     revalidatePath('/dashboard/machines');

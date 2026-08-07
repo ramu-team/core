@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1104.0",
     "@neondatabase/auth": "0.4.2-beta",
     "@prisma/client": "^7.9.1",
     "@ramu/db": "workspace:*",

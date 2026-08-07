@@ -13,15 +13,15 @@ export default function PairedScreenPage() {
 
   useEffect(() => {
     // -------------------------------------------------------------
-    // SIMULASI WEBSOCKET (PUSHER) / HTTP POLLING
+    // WEBSOCKET (PUSHER) / HTTP POLLING SIMULATION
     // -------------------------------------------------------------
     const t1 = setTimeout(() => {
       setStatus('connected');
-    }, 5000); // Simulasi HP scan QR setelah 5 detik
+    }, 5000); // Simulate phone scanning QR after 5 seconds
 
     const t2 = setTimeout(() => {
       setStatus('success');
-    }, 9000); // Simulasi bayar selesai di HP setelah 9 detik
+    }, 9000); // Simulate payment completion on phone after 9 seconds
 
     return () => {
       clearTimeout(t1);
@@ -32,7 +32,7 @@ export default function PairedScreenPage() {
   useEffect(() => {
     if (status === 'success') {
       const t3 = setTimeout(() => {
-        router.push('/brewing'); // Redirect ke layar brewing
+        router.push('/brewing'); // Redirect to brewing screen
       }, 2500);
       return () => clearTimeout(t3);
     }
@@ -42,7 +42,7 @@ export default function PairedScreenPage() {
     <main className="relative flex h-screen w-screen flex-col overflow-hidden bg-stone-950 px-16 py-10">
       {/* Background with Dark Overlay */}
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <Image src="/hero-bg-traditional.png" alt="Background" fill className="object-cover object-center scale-105 blur-[2px]" priority />
+        <Image src="/hero-bg-traditional.png" alt="Background" fill sizes="100vw" className="object-cover object-center scale-105 blur-[2px]" priority />
         <div className="absolute inset-0 bg-stone-950/80" />
         
         {/* Elegant Guilloche */}

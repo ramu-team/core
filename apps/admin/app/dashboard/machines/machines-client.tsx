@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from '@ramu/ui/components/card';
 import { Label } from '@ramu/ui/components/label';
-import { Edit3Icon, KeyIcon } from 'lucide-react';
+import { Edit3Icon, KeyIcon, ActivityIcon } from 'lucide-react';
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
@@ -37,6 +37,14 @@ interface Machine {
   location_name: string | null;
   status: string;
   is_registered: boolean;
+  cups_stock: number;
+  stocks: {
+    tankNumber: number;
+    ingredient_id: string;
+    current_volume: number;
+    max_capacity: number;
+    ingredient: { id: string; name: string };
+  }[];
 }
 
 interface MachinesClientProps {
@@ -49,14 +57,17 @@ interface MachinesClientProps {
     generated_by: { name: string };
     used_by_machine: { registration_code: string } | null;
   }[];
+  ingredientsList?: { id: string; name: string }[];
 }
 
-export default function MachinesClient({ initialMachines, initialCodes }: MachinesClientProps) {
+export default function MachinesClient({ initialMachines, initialCodes, ingredientsList }: MachinesClientProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingMachine, setEditingMachine] = useState<Machine | null>(null);
 
   const [locationName, setLocationName] = useState('');
   const [status, setStatus] = useState('Offline');
+  const [cupsStock, setCupsStock] = useState('0');
+  const [tankConfig, setTankConfig] = useState<{ tankNumber: number; ingredientId: string; currentVolume: number; maxCapacity: number }[]>([]);
 
   const [genState, genFormAction, isGenPending] = useActionState(generateActivationCodeAction, null);
   const [saveState, saveFormAction, isSavePending] = useActionState(saveMachineAction, null);
@@ -84,6 +95,27 @@ export default function MachinesClient({ initialMachines, initialCodes }: Machin
     setEditingMachine(machine);
     setLocationName(machine.location_name || '');
     setStatus(machine.status);
+    setCupsStock(machine.cups_stock.toString());
+    
+    const initialTanks = [1, 2, 3, 4].map(tankNum => {
+      const existing = machine.stocks.find(s => s.tankNumber === tankNum);
+      if (existing) {
+        return {
+          tankNumber: tankNum,
+          ingredientId: existing.ingredient_id,
+          currentVolume: existing.current_volume,
+          maxCapacity: existing.max_capacity,
+        };
+      }
+      return {
+        tankNumber: tankNum,
+        ingredientId: '',
+        currentVolume: 0,
+        maxCapacity: 5000,
+      };
+    });
+    setTankConfig(initialTanks);
+    
     setIsSheetOpen(true);
   };
 
@@ -138,16 +170,70 @@ export default function MachinesClient({ initialMachines, initialCodes }: Machin
       ),
     },
     {
+      accessorKey: "cups_stock",
+      header: "Cups",
+      cell: ({ row }) => (
+        <span className={`font-semibold ${row.original.cups_stock < 20 ? 'text-red-500' : 'text-stone-300'}`}>
+          {row.original.cups_stock}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "stocks",
+      header: "Powder Stocks (g)",
+      cell: ({ row }) => {
+        const stocks = row.original.stocks || [];
+        if (stocks.length === 0) {
+          return <span className="text-xs text-muted-foreground italic">Unconfigured</span>;
+        }
+        return (
+          <div className="flex flex-col gap-1.5 min-w-[200px]">
+            {stocks.sort((a,b) => a.tankNumber - b.tankNumber).map(tank => {
+              const percent = tank.max_capacity > 0 ? (tank.current_volume / tank.max_capacity) * 100 : 0;
+              const isLow = percent < 15;
+              return (
+                <div key={tank.tankNumber} className="flex items-center justify-between gap-3 text-[10px]">
+                  <span className="font-semibold text-stone-300 w-24 truncate" title={tank.ingredient.name}>
+                    T{tank.tankNumber}: {tank.ingredient.name}
+                  </span>
+                  <div className="flex-1 h-1.5 bg-stone-800 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full ${isLow ? 'bg-red-500' : 'bg-amber-500'}`} 
+                      style={{ width: `${Math.min(percent, 100)}%` }} 
+                    />
+                  </div>
+                  <span className={`w-12 text-right tabular-nums ${isLow ? 'text-red-400 font-bold' : 'text-stone-400'}`}>
+                    {tank.current_volume}g
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        );
+      },
+    },
+    {
       id: "actions",
       header: () => <div className="text-right">Actions</div>,
       cell: ({ row }) => (
-        <div className="text-right">
+        <div className="flex items-center justify-end gap-1.5 text-right">
           <Button
             size="sm"
             variant="outline"
-            className="h-7 w-7 text-muted-foreground hover:text-amber-500 transition-colors p-0"
+            className="h-7 w-7 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 border-amber-500/20 transition-colors p-0"
+            onClick={() => toast.info('Hardware test protocol starting... (Coming Soon)')}
+            type="button"
+            title="Run Hardware Tests"
+          >
+            <ActivityIcon className="size-3.5" />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 w-7 text-muted-foreground hover:text-primary transition-colors p-0"
             onClick={() => handleOpenEdit(row.original)}
             type="button"
+            title="Edit Machine"
           >
             <Edit3Icon className="size-3.5" />
           </Button>
@@ -267,7 +353,7 @@ export default function MachinesClient({ initialMachines, initialCodes }: Machin
 
       {/* Edit Machine Sheet */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="sm:max-w-md w-full">
+        <SheetContent className="sm:max-w-md w-full overflow-y-auto max-h-[100dvh]">
           <SheetHeader className="mb-6">
             <SheetTitle>Edit Machine</SheetTitle>
             <SheetDescription>
@@ -309,6 +395,91 @@ export default function MachinesClient({ initialMachines, initialCodes }: Machin
                 </SelectContent>
               </Select>
               <input type="hidden" name="status" value={status} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cupsStock" className="text-sm font-semibold flex items-center gap-2">
+                Cups Stock
+                {parseInt(cupsStock || '0') < 20 && (
+                  <span className="text-[10px] bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Need Refill</span>
+                )}
+              </Label>
+              <Input
+                id="cupsStock"
+                name="cupsStock"
+                type="number"
+                value={cupsStock}
+                onChange={(e) => setCupsStock(e.target.value)}
+                className="h-10"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Tanks Configuration</Label>
+              <div className="flex flex-col gap-3 mt-2">
+                {tankConfig.map((tank, idx) => (
+                  <div key={tank.tankNumber} className="border border-white/10 rounded-md p-3 bg-stone-900/50 flex flex-col gap-2">
+                    <div className="text-xs text-muted-foreground font-semibold uppercase tracking-widest flex items-center justify-between">
+                      <span>Tank {tank.tankNumber}</span>
+                    </div>
+                    
+                    <Select 
+                      value={tank.ingredientId} 
+                      onValueChange={(val: string | null) => {
+                        const newConfig = [...tankConfig];
+                        if (newConfig[idx]) {
+                          newConfig[idx].ingredientId = val || '';
+                          setTankConfig(newConfig);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-8 text-xs w-full bg-background">
+                        <span>{ingredientsList?.find(i => i.id === tank.ingredientId)?.name || "Empty / Unassigned"}</span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Empty / Unassigned</SelectItem>
+                        {ingredientsList?.map(ing => (
+                          <SelectItem key={ing.id} value={ing.id}>{ing.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    <div className="grid grid-cols-2 gap-2 mt-1">
+                      <div className="space-y-1">
+                        <Label className="text-[10px] text-muted-foreground">Weight (g)</Label>
+                        <Input 
+                          type="number" 
+                          className="h-7 text-xs" 
+                          value={tank.currentVolume} 
+                          onChange={(e) => {
+                            const newConfig = [...tankConfig];
+                            if (newConfig[idx]) {
+                              newConfig[idx].currentVolume = parseInt(e.target.value || '0', 10);
+                              setTankConfig(newConfig);
+                            }
+                          }} 
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] text-muted-foreground">Capacity (g)</Label>
+                        <Input 
+                          type="number" 
+                          className="h-7 text-xs" 
+                          value={tank.maxCapacity} 
+                          onChange={(e) => {
+                            const newConfig = [...tankConfig];
+                            if (newConfig[idx]) {
+                              newConfig[idx].maxCapacity = parseInt(e.target.value || '0', 10);
+                              setTankConfig(newConfig);
+                            }
+                          }} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <input type="hidden" name="tanks" value={JSON.stringify(tankConfig)} />
             </div>
 
             {saveState?.error && (

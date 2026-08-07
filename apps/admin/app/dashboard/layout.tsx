@@ -47,6 +47,7 @@ export default async function DashboardLayout({
     name: admin?.name || session.user.name,
     email: session.user.email,
     avatar: session.user.image,
+    lastLogin: admin?.last_login ? admin.last_login.toISOString() : null,
   }
 
   return (

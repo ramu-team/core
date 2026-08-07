@@ -1,7 +1,7 @@
 import { Geist_Mono, Inter } from "next/font/google"
 
 import "@ramu/ui/globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
+
 import { cn } from "@ramu/ui/lib/utils"
 import NextTopLoader from 'nextjs-toploader'
 import { KioskWrapper } from "@/components/kiosk-wrapper"
@@ -23,6 +23,7 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning
       className={cn(
+        "dark",
         "antialiased",
         fontMono.variable,
         "font-sans",
@@ -31,11 +32,9 @@ export default function RootLayout({
     >
       <body className="bg-stone-950 text-stone-50 overflow-hidden">
         <NextTopLoader color="#f59e0b" showSpinner={false} />
-        <ThemeProvider defaultTheme="dark">
           <KioskWrapper>
             {children}
           </KioskWrapper>
-        </ThemeProvider>
       </body>
     </html>
   )

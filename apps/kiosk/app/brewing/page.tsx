@@ -4,19 +4,22 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { deductCupAction } from '../actions';
+import { useKioskStore } from '@/store/kiosk-store';
 
 export default function BrewingScreenPage() {
   const router = useRouter();
+  const { machineId } = useKioskStore();
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState('Menyiapkan gelas...');
 
   useEffect(() => {
     // -------------------------------------------------------------
-    // SIMULASI PROGRESS DARI MESIN
+    // SIMULATING HARDWARE MACHINE PROGRESS
     // -------------------------------------------------------------
     let current = 0;
     const interval = setInterval(() => {
-      current += 1; // Naik 1% setiap 80ms untuk pergerakan mulus
+      current += 1; // Increase 1% every 80ms for smooth animation
       
       if (current <= 15) {
         setStatusText('Menyiapkan gelas...');
@@ -36,20 +39,24 @@ export default function BrewingScreenPage() {
   }, []);
 
   useEffect(() => {
-    // Kembali ke Idle Screen (Halaman Depan) setelah selesai
+    // Return to Idle Screen after finished
     if (progress === 100) {
+      if (machineId) {
+        deductCupAction(machineId).catch(console.error);
+      }
+      
       const timeout = setTimeout(() => {
         router.replace('/');
-      }, 6000); // Tunggu 6 detik agar user bisa ambil jamu
+      }, 6000); // Wait 6 seconds for user to take their drink
       return () => clearTimeout(timeout);
     }
-  }, [progress, router]);
+  }, [progress, router, machineId]);
 
   return (
     <main className="relative flex h-screen w-screen flex-col items-center justify-center overflow-hidden bg-stone-950 px-16 py-10">
       {/* Background with Dark Overlay */}
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <Image src="/hero-bg-traditional.png" alt="Background" fill className="object-cover object-center scale-105 blur-[2px]" priority />
+        <Image src="/hero-bg-traditional.png" alt="Background" fill sizes="100vw" className="object-cover object-center scale-105 blur-[2px]" priority />
         <div className="absolute inset-0 bg-stone-950/80" />
         
         {/* Elegant Guilloche */}

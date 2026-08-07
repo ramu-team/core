@@ -9,7 +9,7 @@ import Image from 'next/image';
 
 export default function IdleScreen() {
   const router = useRouter();
-  const { locationName, registrationCode } = useKioskStore();
+  const { locationName } = useKioskStore();
 
   const handleTouch = () => {
     router.push('/mode-selection');
@@ -35,6 +35,7 @@ export default function IdleScreen() {
             src="/hero-bg-traditional.png"
             alt="Premium Jamu Background"
             fill
+            sizes="100vw"
             className="object-cover object-center"
             priority
           />

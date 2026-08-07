@@ -61,6 +61,7 @@ interface Menu {
   name: string;
   description: string | null;
   price: number;
+  image_url: string | null;
   isActive: boolean;
   recipes: Recipe[];
 }
@@ -79,6 +80,8 @@ export default function MenuClient({ initialMenus, ingredientsList }: MenuClient
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [selectedFileUrl, setSelectedFileUrl] = useState<string | null>(null);
   const [recipe, setRecipe] = useState<RecipeItem[]>([]);
 
   const [state, formAction, isPending] = useActionState(saveMenuAction, null);
@@ -109,6 +112,8 @@ export default function MenuClient({ initialMenus, ingredientsList }: MenuClient
     setName('');
     setDescription('');
     setPrice('');
+    setImageUrl('');
+    setSelectedFileUrl(null);
     setRecipe([]);
     setIsSheetOpen(true);
   };
@@ -118,6 +123,8 @@ export default function MenuClient({ initialMenus, ingredientsList }: MenuClient
     setName(menu.name);
     setDescription(menu.description ?? '');
     setPrice(menu.price.toString());
+    setImageUrl(menu.image_url ?? '');
+    setSelectedFileUrl(null);
     setRecipe(
       menu.recipes.map((r) => ({
         ingredientId: r.ingredient_id,
@@ -125,6 +132,17 @@ export default function MenuClient({ initialMenus, ingredientsList }: MenuClient
       }))
     );
     setIsSheetOpen(true);
+  };
+
+  const handleFileChange = (file: File | undefined) => {
+    if (!file) return;
+    const objectUrl = URL.createObjectURL(file);
+    setSelectedFileUrl(objectUrl);
+  };
+
+  const handleRemoveImage = () => {
+    setImageUrl('');
+    setSelectedFileUrl(null);
   };
 
   const handleAddRecipeItem = () => {
@@ -150,6 +168,21 @@ export default function MenuClient({ initialMenus, ingredientsList }: MenuClient
   };
 
   const columns: ColumnDef<Menu>[] = [
+    {
+      accessorKey: "image",
+      header: "Photo",
+      cell: ({ row }) => (
+        row.original.image_url ? (
+          <div className="w-10 h-10 rounded-md overflow-hidden border border-white/10 shrink-0">
+            <img src={row.original.image_url} alt={row.original.name} className="w-full h-full object-cover" />
+          </div>
+        ) : (
+          <div className="w-10 h-10 rounded-md bg-stone-900 border border-white/10 flex items-center justify-center text-[9px] text-muted-foreground italic shrink-0">
+            No img
+          </div>
+        )
+      )
+    },
     {
       accessorKey: "name",
       header: "Menu Name",
@@ -340,6 +373,40 @@ export default function MenuClient({ initialMenus, ingredientsList }: MenuClient
                 required
                 className="h-10"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Jamu Photo</Label>
+              <div className="flex flex-col gap-3">
+                {(selectedFileUrl || imageUrl) ? (
+                  <div className="relative w-full h-40 rounded-lg overflow-hidden border border-white/10 group">
+                    <img src={selectedFileUrl || imageUrl} alt="Preview" className="object-cover w-full h-full" />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                      <Button type="button" variant="destructive" size="sm" onClick={handleRemoveImage}>
+                        Remove Image
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full h-40 rounded-lg border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-2 bg-stone-900/50">
+                    <span className="text-xs text-muted-foreground">No image uploaded</span>
+                  </div>
+                )}
+                
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="file"
+                    name="image_file"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e.target.files?.[0])}
+                    className="flex-1 cursor-pointer"
+                  />
+                </div>
+                <input type="hidden" name="image_url" value={imageUrl} />
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Upload a high quality photo for the Kiosk. Max size 5MB.
+              </p>
             </div>
 
             {/* Recipe Builder */}

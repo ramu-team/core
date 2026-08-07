@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { authClient } from "@/lib/auth/client"
+import { recordLogin } from "@/app/login/actions"
 import { cn } from "@ramu/ui/lib/utils"
 import { Button } from "@ramu/ui/components/button"
 import {
@@ -43,6 +44,7 @@ export function LoginForm({
           if (error) {
             reject(new Error(error.message || "Login gagal. Silakan coba lagi."))
           } else {
+            await recordLogin(email)
             resolve("Login sukses!")
             router.push("/dashboard")
           }

@@ -45,6 +45,7 @@ model Admin {
   last_login    DateTime?
 
   activation_codes MachineActivationCode[]
+  audit_logs       AuditLog[]
 }
 
 // ==========================================
@@ -57,6 +58,7 @@ model Machine {
   is_registered     Boolean @default(false)
   location_name     String?
   status            String  @default("Offline") // Online, Offline
+  cups_stock        Int     @default(0)
 
   activation_codes MachineActivationCode[]
   stocks           MachineStock[]
@@ -97,6 +99,7 @@ model Menu {
   name         String
   description  String?
   price        Decimal
+  image_url    String?
   isActive     Boolean @default(true)
 
   recipes        Recipe[]
@@ -177,4 +180,20 @@ model Order {
 
   consultation_id String?
   consultation    ConsultationHistory? @relation(fields: [consultation_id], references: [id])
+}
+
+// ==========================================
+// 5. AUDIT & LOGGING
+// ==========================================
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  action     String   // e.g., "UPDATE_MACHINE", "CREATE_MENU"
+  entity     String   // e.g., "Machine", "Menu"
+  entity_id  String?  // UUID of the affected entity
+  details    Json?    // Optional detailed changes or payload
+  createdAt  DateTime @default(now())
+
+  admin_id   String
+  admin      Admin    @relation(fields: [admin_id], references: [id])
 }

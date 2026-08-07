@@ -31,6 +31,7 @@ export function NavUser({
     name: string
     email: string
     avatar: string
+    lastLogin?: string | null
   }
 }) {
   const { isMobile } = useSidebar()
@@ -72,6 +73,11 @@ export function NavUser({
                     <span className="truncate text-xs">{user.email}</span>
                   </div>
                 </div>
+                {user.lastLogin && (
+                  <div className="px-2 py-1.5 text-[10px] text-muted-foreground bg-muted/50 mt-1 mx-1 rounded-md border border-border/50 text-center font-medium">
+                    Last login: {new Date(user.lastLogin).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                  </div>
+                )}
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

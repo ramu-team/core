@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+
 import { useKioskStore } from '@/store/kiosk-store';
 import { activateMachineAction } from '@/app/actions';
 import { Button } from '@ramu/ui/components/button';
@@ -9,7 +9,7 @@ import { Input } from '@ramu/ui/components/input';
 import { LeafIcon, ArrowRightIcon, LoaderIcon, CpuIcon } from 'lucide-react';
 
 export default function SetupClient() {
-  const router = useRouter();
+
   const { registerMachine } = useKioskStore();
   const [code, setCode] = useState('');
   const [isPending, startTransition] = useTransition();
@@ -26,9 +26,9 @@ export default function SetupClient() {
       if (res.error) {
         setError(res.error);
       } else if (res.success && res.machine) {
-        // Simpan ke local storage via Zustand
+        // Save to local storage via Zustand
         registerMachine(res.machine.id, res.machine.registration_code, res.machine.location_name);
-        // KioskWrapper akan otomatis redirect ke '/'
+        // KioskWrapper will automatically redirect to '/'
       }
     });
   };

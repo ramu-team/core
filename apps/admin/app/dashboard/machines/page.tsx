@@ -41,9 +41,15 @@ export default async function MachinesPage(props: {
     where.is_registered = is_registered === 'true';
   }
 
-  const [machines, codes] = await Promise.all([
+  const [machines, codes, ingredients] = await Promise.all([
     prisma.machine.findMany({
       where,
+      include: {
+        stocks: {
+          include: { ingredient: true },
+          orderBy: { tankNumber: 'asc' },
+        },
+      },
       orderBy: { registration_code: 'asc' },
     }),
     prisma.machineActivationCode.findMany({
@@ -58,6 +64,9 @@ export default async function MachinesPage(props: {
       orderBy: { expires_at: 'desc' },
       take: 20,
     }),
+    prisma.ingredient.findMany({
+      orderBy: { name: 'asc' },
+    }),
   ]);
 
   return (
@@ -70,7 +79,7 @@ export default async function MachinesPage(props: {
           Monitor your IoT dispensers, update locations, and generate codes for machine setup.
         </p>
       </div>
-      <MachinesClient initialMachines={machines} initialCodes={codes} />
+      <MachinesClient initialMachines={machines} initialCodes={codes} ingredientsList={ingredients} />
     </div>
   );
 }

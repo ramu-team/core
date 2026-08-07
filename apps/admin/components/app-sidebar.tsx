@@ -24,6 +24,7 @@ import {
   ShoppingCartIcon,
   UsersIcon,
   ShieldAlertIcon,
+  ShieldCheckIcon,
   LeafIcon,
 } from "lucide-react"
 
@@ -88,6 +89,11 @@ const data = {
           url: "/dashboard/admins",
           icon: <ShieldAlertIcon />,
         },
+        {
+          title: "Audit Logs",
+          url: "/dashboard/audit-logs",
+          icon: <ShieldCheckIcon />,
+        },
       ],
     },
   ],
@@ -98,6 +104,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     name?: string | null
     email?: string | null
     avatar?: string | null
+    lastLogin?: string | null
   }
 }
 
@@ -108,6 +115,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
     name: user?.name || "Admin",
     email: user?.email || "admin@ramu.com",
     avatar: user?.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || "Admin"}`,
+    lastLogin: user?.lastLogin || null,
   }
 
   const activeNavGroups = data.navGroups.map((group) => ({

@@ -10,6 +10,7 @@ interface KioskState {
   // Actions
   registerMachine: (id: string, code: string, location: string | null) => void
   resetMachine: () => void
+  setLocationName: (location: string | null) => void
 }
 
 export const useKioskStore = create<KioskState>()(
@@ -27,6 +28,8 @@ export const useKioskStore = create<KioskState>()(
           registrationCode: code,
           locationName: location
         }),
+
+      setLocationName: (location) => set({ locationName: location }),
 
       resetMachine: () => 
         set({ 
