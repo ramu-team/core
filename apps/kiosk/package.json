@@ -12,12 +12,15 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@google/genai": "^2.16.0",
     "@ramu/db": "workspace:*",
     "@ramu/ui": "workspace:*",
     "framer-motion": "^13.0.0",
     "lucide-react": "^1.28.0",
+    "mqtt": "^5.15.2",
     "next": "16.2.6",
     "nextjs-toploader": "^3.9.17",
+    "qrcode.react": "^4.2.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "zustand": "^5.0.14"

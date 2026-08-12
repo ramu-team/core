@@ -1,42 +1,118 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import mqtt from 'mqtt';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { deductCupAction } from '../actions';
 import { useKioskStore } from '@/store/kiosk-store';
 
-export default function BrewingScreenPage() {
+function BrewingContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const menuId = searchParams.get('menu');
+  const consultationId = searchParams.get('consultationId');
+  
   const { machineId } = useKioskStore();
   const [progress, setProgress] = useState(0);
-  const [statusText, setStatusText] = useState('Menyiapkan gelas...');
+  const [statusText, setStatusText] = useState('Menyiapkan koneksi ke mesin...');
+  const [hasStarted, setHasStarted] = useState(false);
 
   useEffect(() => {
-    // -------------------------------------------------------------
-    // SIMULATING HARDWARE MACHINE PROGRESS
-    // -------------------------------------------------------------
-    let current = 0;
-    const interval = setInterval(() => {
-      current += 1; // Increase 1% every 80ms for smooth animation
-      
-      if (current <= 15) {
-        setStatusText('Menyiapkan gelas...');
-      } else if (current <= 80) {
-        setStatusText('Menuangkan racikan herbal...');
-      } else if (current <= 99) {
-        setStatusText('Menyelesaikan proses...');
-      } else {
-        setStatusText('Jamu Siap Dinikmati!');
-        clearInterval(interval);
-      }
-      
-      setProgress(Math.min(current, 100));
-    }, 80);
+    if (!machineId || (!menuId && !consultationId) || hasStarted) return;
+    setHasStarted(true);
 
-    return () => clearInterval(interval);
-  }, []);
+    let client: mqtt.MqttClient | null = null;
+    let isMounted = true;
+
+    const startBrewing = async () => {
+      try {
+        setStatusText('Mengirim instruksi ke mesin...');
+        
+        // 1. Send command to Kiosk API
+        const payload: Record<string, unknown> = { machineId };
+        if (menuId) payload.menuId = menuId;
+        if (consultationId) payload.consultationId = consultationId;
+
+        const res = await fetch('/api/machine/brew', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Gagal mengirim instruksi');
+        }
+
+        if (!isMounted) return;
+        setStatusText('Menunggu respon mesin...');
+
+        // 2. Connect to MQTT for real-time progress
+        const brokerUrl = process.env.NEXT_PUBLIC_MQTT_BROKER_URL || 'wss://d763ca9eaaaf4650b898cd2c362b6eba.s1.eu.hivemq.cloud:8884/mqtt';
+        const topicPrefix = process.env.NEXT_PUBLIC_MQTT_TOPIC_PREFIX || 'ramu-kiosk-prod';
+        const username = process.env.NEXT_PUBLIC_MQTT_USERNAME;
+        const password = process.env.NEXT_PUBLIC_MQTT_PASSWORD;
+        
+        client = mqtt.connect(brokerUrl, {
+          username,
+          password
+        });
+        
+        client.on('connect', () => {
+          console.log('Connected to MQTT Broker via WebSocket');
+          client?.subscribe(`${topicPrefix}/machine/${machineId}/progress`);
+        });
+
+        client.on('message', (topic, message) => {
+          try {
+            const payload = JSON.parse(message.toString());
+            if (payload.progress !== undefined) {
+              setProgress(Math.min(payload.progress, 100));
+            }
+            if (payload.statusText) {
+              setStatusText(payload.statusText);
+            }
+            
+            if (payload.progress >= 100) {
+              setStatusText('Jamu Siap Dinikmati!');
+              client?.end();
+            }
+          } catch (e) {
+            console.error('Failed to parse MQTT message', e);
+          }
+        });
+
+      } catch (error: unknown) {
+        console.error('Failed to start brewing:', error);
+        const msg = error instanceof Error ? error.message : 'Unknown error';
+        alert(`Gagal memulai pembuatan jamu: ${msg}`);
+        // Fallback simulation if real machine fails
+        setTimeout(() => {
+          setStatusText('Menggunakan Mode Simulasi (Fallback)...');
+          let current = 0;
+          const interval = setInterval(() => {
+            current += 5;
+            setProgress(Math.min(current, 100));
+            if (current >= 100) {
+              setStatusText('Jamu Siap Dinikmati!');
+              clearInterval(interval);
+            }
+          }, 400);
+        }, 2000);
+      }
+    };
+
+    startBrewing();
+
+    return () => {
+      isMounted = false;
+      if (client) {
+        client.end();
+      }
+    };
+  }, [machineId, menuId, consultationId, hasStarted]);
 
   useEffect(() => {
     // Return to Idle Screen after finished
@@ -187,5 +263,17 @@ export default function BrewingScreenPage() {
 
       </div>
     </main>
+  );
+}
+
+export default function BrewingScreenPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen w-screen items-center justify-center bg-stone-950 text-amber-500 text-2xl font-serif">
+        Memuat...
+      </div>
+    }>
+      <BrewingContent />
+    </Suspense>
   );
 }

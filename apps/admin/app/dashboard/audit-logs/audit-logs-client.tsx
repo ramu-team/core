@@ -18,7 +18,7 @@ interface AuditLog {
   action: string;
   entity: string;
   entity_id: string | null;
-  details: any;
+  details: unknown;
   createdAt: Date;
   admin: { name: string; email: string };
 }

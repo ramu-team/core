@@ -58,7 +58,7 @@ export default function CatalogClient() {
 
   const handleOrder = (menuId: string, isAvailable?: boolean) => {
     if (isAvailable === false) return;
-    router.push(`/brewing?menu=${menuId}`);
+    router.push(`/paired?menu=${menuId}`);
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -193,12 +193,12 @@ export default function CatalogClient() {
         {isLoading ? (
           <div className="flex h-full flex-col items-center justify-center space-y-6">
             <LoaderIcon className="size-16 text-amber-500 animate-spin" />
-            <p className="text-xl text-stone-400 font-light">Mengecek ketersediaan stok mesin...</p>
+            <p className="text-xl text-stone-400 font-light">Checking machine stock availability...</p>
           </div>
         ) : menus.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center space-y-6">
             <AlertCircleIcon className="size-24 text-stone-600" />
-            <p className="text-3xl text-stone-400 font-light">Belum ada menu jamu yang tersedia.</p>
+            <p className="text-3xl text-stone-400 font-light">No jamu menus available yet.</p>
           </div>
         ) : (
           <div className="flex h-full items-center pb-24 w-max px-16">
@@ -235,7 +235,7 @@ export default function CatalogClient() {
                   {/* Status Badge */}
                   <div className={`absolute top-6 right-6 rounded-full px-5 py-2 border shadow-xl backdrop-blur-md ${menu.isAvailable === false ? 'bg-red-500/80 border-red-500' : 'bg-black/50 border-white/10'}`}>
                     <span className={`font-bold tracking-widest text-[0.8rem] uppercase ${menu.isAvailable === false ? 'text-white' : 'text-amber-400'}`}>
-                      {menu.isAvailable === false ? 'Stok Kosong' : 'Signature'}
+                      {menu.isAvailable === false ? 'Out of Stock' : 'Signature'}
                     </span>
                   </div>
 

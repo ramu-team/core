@@ -11,7 +11,7 @@ export async function logAdminAction({
   action: string;
   entity: string;
   entityId?: string;
-  details?: Record<string, any>;
+  details?: import('@prisma/client').Prisma.InputJsonValue;
 }) {
   try {
     await prisma.auditLog.create({

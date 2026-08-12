@@ -11,6 +11,7 @@ import {
 import { Button } from '@ramu/ui/components/button';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { useKioskStore } from '@/store/kiosk-store';
 
 interface Symptom {
   id: string;
@@ -21,8 +22,10 @@ interface Symptom {
 
 export default function AIClient({ symptoms }: { symptoms: Symptom[] }) {
   const router = useRouter();
+  const { machineId } = useKioskStore();
   const [selected, setSelected] = useState<string[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [outOfStock, setOutOfStock] = useState(false);
 
   const groupedSymptoms = symptoms.reduce((acc, symptom) => {
     if (!acc[symptom.category]) {
@@ -69,17 +72,71 @@ export default function AIClient({ symptoms }: { symptoms: Symptom[] }) {
     }
   };
 
-  const handleRecommend = () => {
+  const handleRecommend = async () => {
     if (selected.length === 0) return;
+    if (!machineId) {
+      alert('Kiosk belum di-setup dengan mesin.');
+      return;
+    }
+    
     setIsAnalyzing(true);
     
-    // AI Thinking Simulation
-    setTimeout(() => {
-      // At this stage it should go to the recommendation result page, but the prototype can throw to order-preview or directly brewing.
-      // We assume there will be an API call to the AI backend, then return Jamu Menu ID / Recipe.
-      router.push('/catalog'); // Temporarily return to catalog / pretend recommendation becomes menu
-    }, 4000);
+    try {
+      const res = await fetch('/api/ai/recommend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ machineId, symptoms: selected })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        if (data.code === 'OUT_OF_STOCK') {
+          setIsAnalyzing(false);
+          setOutOfStock(true);
+          return;
+        }
+        throw new Error(data.error || 'Gagal terhubung ke AI');
+      }
+      
+      router.push(`/ai-consultation/result?id=${data.consultationId}`);
+    } catch (error: unknown) {
+      console.error(error);
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Error: ${msg}`);
+      setIsAnalyzing(false);
+    }
   };
+
+  if (outOfStock) {
+    return (
+      <main 
+        className="relative flex h-screen w-screen flex-col overflow-hidden bg-stone-950 px-16 py-10 cursor-pointer"
+        onClick={() => router.push('/catalog')}
+      >
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <Image src="/hero-bg-traditional.png" alt="Background" fill className="object-cover object-center scale-105 blur-[2px]" priority />
+          <div className="absolute inset-0 bg-stone-950/90" />
+        </div>
+        
+        <div className="relative z-10 flex h-full flex-col items-center justify-center">
+          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex size-32 items-center justify-center rounded-full bg-red-500/20 text-red-500 mb-8 border border-red-500/30">
+            <WindIcon className="size-16" />
+          </motion.div>
+          
+          <h2 className="font-serif text-[4rem] font-normal text-white drop-shadow-md text-center mb-6 max-w-4xl">
+            Mohon Maaf, Stok Terbatas
+          </h2>
+          <p className="text-2xl text-stone-300 font-light text-center max-w-3xl leading-relaxed mb-12">
+            Saat ini bahan jamu di mesin sedang tidak mencukupi untuk membuat racikan yang sesuai dengan keluhan Anda.
+          </p>
+          
+          <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity }} className="text-amber-500 text-xl font-medium">
+            Ketuk layar untuk kembali ke Katalog Menu
+          </motion.div>
+        </div>
+      </main>
+    );
+  }
 
   if (isAnalyzing) {
     return (

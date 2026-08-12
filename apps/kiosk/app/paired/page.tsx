@@ -1,42 +1,110 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeftIcon, CheckIcon } from 'lucide-react';
 import { Button } from '@ramu/ui/components/button';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { QRCodeCanvas } from 'qrcode.react';
+import mqtt from 'mqtt';
+import { useKioskStore } from '@/store/kiosk-store';
 
-export default function PairedScreenPage() {
+function PairedContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { machineId } = useKioskStore();
+  const consultationId = searchParams.get('consultationId');
+  const menu = searchParams.get('menu');
   const [status, setStatus] = useState<'waiting' | 'connected' | 'success'>('waiting');
+  const [sessionId, setSessionId] = useState('');
+  const [orderPayload, setOrderPayload] = useState<{menuId?: string, consultationId?: string}>({});
+  const webUrl = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
 
   useEffect(() => {
-    // -------------------------------------------------------------
-    // WEBSOCKET (PUSHER) / HTTP POLLING SIMULATION
-    // -------------------------------------------------------------
-    const t1 = setTimeout(() => {
-      setStatus('connected');
-    }, 5000); // Simulate phone scanning QR after 5 seconds
+    const brokerUrl = process.env.NEXT_PUBLIC_MQTT_BROKER_URL || 'wss://d763ca9eaaaf4650b898cd2c362b6eba.s1.eu.hivemq.cloud:8884/mqtt';
+    const topicPrefix = process.env.NEXT_PUBLIC_MQTT_TOPIC_PREFIX || 'ramu-kiosk-prod';
+    const username = process.env.NEXT_PUBLIC_MQTT_USERNAME;
+    const password = process.env.NEXT_PUBLIC_MQTT_PASSWORD;
+    
+    const client = mqtt.connect(brokerUrl, {
+      username,
+      password
+    });
 
-    const t2 = setTimeout(() => {
-      setStatus('success');
-    }, 9000); // Simulate payment completion on phone after 9 seconds
+    let currentTopic = '';
+
+    const setupSession = () => {
+      const newSessionId = crypto.randomUUID();
+      setSessionId(newSessionId);
+      
+      if (currentTopic) {
+        client.unsubscribe(currentTopic);
+      }
+      
+      currentTopic = `${topicPrefix}/pair/${newSessionId}`;
+      if (client.connected) {
+        client.subscribe(currentTopic);
+      }
+    };
+
+    setupSession();
+
+    client.on('connect', () => {
+      if (currentTopic) {
+        client.subscribe(currentTopic);
+      }
+    });
+
+    client.on('message', (topicReceived, message) => {
+      if (topicReceived === currentTopic) {
+        try {
+          const payload = JSON.parse(message.toString());
+          if (payload.status === 'connected') {
+            setStatus('connected');
+          } else if (payload.status === 'brew') {
+            setOrderPayload({ 
+              menuId: payload.menuId, 
+              consultationId: payload.consultationId 
+            });
+            setStatus('success');
+          }
+        } catch (e) {
+          console.error('Invalid MQTT message payload', e);
+        }
+      }
+    });
+
+    // Perbarui QR Code (Session ID) setiap 1 menit jika masih menunggu
+    const interval = setInterval(() => {
+      setStatus((currentStatus) => {
+        if (currentStatus === 'waiting') {
+          setupSession();
+        }
+        return currentStatus; // return the same status to avoid side-effects
+      });
+    }, 60000);
 
     return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
+      clearInterval(interval);
+      client.end();
     };
   }, []);
 
   useEffect(() => {
     if (status === 'success') {
       const t3 = setTimeout(() => {
-        router.push('/brewing'); // Redirect to brewing screen
+        let targetUrl = '/brewing';
+        if (orderPayload.consultationId) targetUrl += `?consultationId=${orderPayload.consultationId}`;
+        else if (orderPayload.menuId) targetUrl += `?menu=${orderPayload.menuId}`;
+        
+        router.push(targetUrl); // Redirect to brewing screen
       }, 2500);
       return () => clearTimeout(t3);
     }
-  }, [status, router]);
+  }, [status, router, orderPayload]);
+
+  const qrUrl = `${webUrl}/?session=${sessionId}${machineId ? `&machineId=${machineId}` : ''}`;
 
   return (
     <main className="relative flex h-screen w-screen flex-col overflow-hidden bg-stone-950 px-16 py-10">
@@ -78,12 +146,16 @@ export default function PairedScreenPage() {
             </div>
             
             <div className="relative flex size-96 items-center justify-center rounded-[3rem] bg-white p-8 shadow-[0_0_100px_rgba(251,191,36,0.2)] border-2 border-amber-500/20">
-              {/* Dummy High-Fidelity QR Code Pattern */}
-              <div className="grid grid-cols-6 grid-rows-6 gap-2 w-full h-full opacity-90 p-4">
-                 {[...Array(36)].map((_, i) => (
-                   <div key={i} className={`bg-stone-950 rounded-sm ${(i%2===0 || i%7===0) ? 'opacity-100' : 'opacity-0'} ${i===0||i===5||i===30 ? 'scale-150 rounded-lg' : ''}`} />
-                 ))}
-              </div>
+              {sessionId ? (
+                <QRCodeCanvas 
+                  value={qrUrl} 
+                  size={300} 
+                  level="Q" 
+                  fgColor="#1c1917" // stone-900
+                />
+              ) : (
+                <div className="animate-pulse bg-stone-200 size-[300px] rounded-xl" />
+              )}
               
               {/* Elegant Scanning Laser Animation */}
               <motion.div 
@@ -120,7 +192,7 @@ export default function PairedScreenPage() {
                 HP Terhubung
               </h1>
               <p className="text-2xl text-stone-300 font-light max-w-2xl mx-auto leading-relaxed">
-                Silakan pilih jamu dan selesaikan pembayaran langsung dari layar smartphone Anda.
+                Silakan lihat HP Anda dan tekan tombol konfirmasi untuk melanjutkan pembuatan jamu.
               </p>
             </div>
           </motion.div>
@@ -134,7 +206,7 @@ export default function PairedScreenPage() {
             </motion.div>
             <div className="text-center space-y-4">
               <h1 className="font-serif text-[4.5rem] font-normal text-emerald-400 drop-shadow-lg">
-                Pembayaran Sukses
+                Pesanan Dikonfirmasi
               </h1>
               <p className="text-2xl text-stone-300 font-light">
                 Mempersiapkan mesin pembuat jamu...
@@ -145,5 +217,13 @@ export default function PairedScreenPage() {
 
       </div>
     </main>
+  );
+}
+
+export default function PairedScreenPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen w-screen items-center justify-center bg-stone-950 text-amber-500 text-2xl font-serif">Memuat...</div>}>
+      <PairedContent />
+    </Suspense>
   );
 }

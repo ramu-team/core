@@ -35,11 +35,15 @@ export function KioskWrapper({ children }: { children: React.ReactNode }) {
 
     let mounted = true;
     const checkHealth = async () => {
+      // Restrict DB calls to specific routes to save connections
+      const allowedRoutes = ['/', '/catalog', '/ai-consultation'];
+      if (!allowedRoutes.includes(pathname)) return;
+
       const res = await getMachineHealthAction(machineId);
       if (!mounted) return;
 
       if (res.error) {
-        setMaintenanceMsg('Mesin tidak ditemukan atau terjadi kesalahan server.');
+        setMaintenanceMsg('Machine not found or server error occurred.');
         return;
       }
 
@@ -49,32 +53,28 @@ export function KioskWrapper({ children }: { children: React.ReactNode }) {
         }
 
         if (!res.data.is_registered) {
-          setMaintenanceMsg('Mesin ini tidak terdaftar.');
+          setMaintenanceMsg('This machine is not registered.');
         } else if (res.data.status === 'Offline') {
-          setMaintenanceMsg('Mesin Sedang Offline');
+          setMaintenanceMsg('Machine is Offline');
         } else if (res.data.status === 'Maintenance') {
-          setMaintenanceMsg('Mesin Sedang Dalam Pemeliharaan');
+          setMaintenanceMsg('Machine is Under Maintenance');
         } else if (res.data.cups_stock <= 0) {
-          setMaintenanceMsg('Stok Cup Habis. Silakan hubungi petugas.');
+          setMaintenanceMsg('Cup stock is empty. Please contact staff.');
         } else if (res.data.is_ingredients_empty) {
-          setMaintenanceMsg('Stok Bahan Habis. Silakan hubungi petugas.');
+          setMaintenanceMsg('Ingredient stock is empty. Please contact staff.');
         } else {
           setMaintenanceMsg(null);
         }
       }
     };
 
-    // Initial check
+    // Initial check and check on route changes
     checkHealth();
-
-    // Poll every 15 seconds
-    const intervalId = setInterval(checkHealth, 15000);
 
     return () => {
       mounted = false;
-      clearInterval(intervalId);
     };
-  }, [isHydrated, machineId, isRegistered, locationName, setLocationName]);
+  }, [isHydrated, machineId, isRegistered, locationName, setLocationName, pathname]);
 
   if (!isHydrated) {
     // Show splash screen while hydrating from local storage
@@ -106,14 +106,14 @@ export function KioskWrapper({ children }: { children: React.ReactNode }) {
             <AlertTriangleIcon className="size-24 text-red-500" />
           </div>
           <h1 className="text-5xl font-serif text-white mb-6 tracking-wide uppercase drop-shadow-lg">
-            Mohon Maaf
+            System Locked
           </h1>
           <p className="text-2xl text-stone-300 font-light max-w-2xl leading-relaxed">
             {maintenanceMsg}
           </p>
           <div className="mt-16 text-sm text-stone-500 flex items-center gap-3">
             <div className="size-2 rounded-full bg-red-500 animate-ping" />
-            Sistem Terkunci
+            System Locked
           </div>
         </div>
       )}

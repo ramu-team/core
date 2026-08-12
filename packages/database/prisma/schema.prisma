@@ -12,20 +12,20 @@ datasource db {
 }
 
 // ==========================================
-// 1. MANAJEMEN AKUN & AKSES
+// 1. ACCOUNT & ACCESS MANAGEMENT
 // ==========================================
 
 model User {
   id String @id @default(uuid())
 
-  // Untuk identifikasi Guest / Lazy Login
+  // For Guest / Lazy Login identification
   guest_session_id String? @unique
   is_guest         Boolean @default(true)
 
-  // Link ke akun Neon Managed Better Auth (Terisi jika user login via Google)
+  // Link to Neon Managed Better Auth account (Filled if user logs in via Google)
   neon_auth_user_id String? @unique
 
-  // Data bayangan (di-sync dari Neon Auth saat login)
+  // Shadow data (synced from Neon Auth upon login)
   email      String?
   name       String?
   avatar_url String?
@@ -41,7 +41,7 @@ model Admin {
   name          String
   email         String    @unique
   password_hash String
-  role          String // Misal: Superadmin, Operator
+  role          String // Example: Superadmin, Operator
   last_login    DateTime?
 
   activation_codes MachineActivationCode[]
@@ -49,12 +49,12 @@ model Admin {
 }
 
 // ==========================================
-// 2. MANAJEMEN PERANGKAT IOT (DEVICE)
+// 2. IOT DEVICE MANAGEMENT
 // ==========================================
 
 model Machine {
   id                String  @id @default(uuid())
-  registration_code String  @unique // Kode hardware bawaan pabrik
+  registration_code String  @unique // Default hardware code from factory
   is_registered     Boolean @default(false)
   location_name     String?
   status            String  @default("Offline") // Online, Offline
@@ -79,16 +79,16 @@ model MachineActivationCode {
   used_by_machine    Machine? @relation(fields: [used_by_machine_id], references: [id])
 }
 
-// Catatan: Tabel `pairing_sessions` tidak dimasukkan ke Prisma karena rotasi QR 1 menit ditangani oleh Upstash Redis.
+// Note: The `pairing_sessions` table is not included in Prisma because the 1-minute QR rotation is handled by Upstash Redis.
 
 // ==========================================
-// 3. KATALOG, BAHAN, & STOK MESIN
+// 3. CATALOG, INGREDIENTS, & MACHINE STOCK
 // ==========================================
 
 model Ingredient {
   id         String @id @default(uuid())
   name   String
-  unit   String // Contoh: ml
+  unit   String // Example: ml
 
   recipes Recipe[]
   stocks  MachineStock[]
@@ -120,8 +120,8 @@ model Recipe {
 
 model MachineStock {
   id             String @id @default(uuid())
-  tankNumber     Int // Posisi pompa di mesin IoT
-  current_volume Float // Sisa cairan aktual
+  tankNumber     Int // Pump position on IoT machine
+  current_volume Float // Actual remaining liquid volume
   max_capacity   Float
 
   machine_id String
@@ -132,22 +132,22 @@ model MachineStock {
 }
 
 // ==========================================
-// 4. KONSULTASI AI & TRANSAKSI
+// 4. AI CONSULTATION & TRANSACTIONS
 // ==========================================
 
 model SymptomOption {
   id           String  @id @default(uuid())
-  category     String // Kondisi Umum, Rasa Sakit, Pencernaan
+  category     String // General Condition, Pain, Digestion
   name         String
-  icon         String? // Class ikon untuk UI Kiosk/HP
+  icon         String? // Icon class for Kiosk/Mobile UI
   isActive     Boolean @default(true)
 }
 
 model ConsultationHistory {
   id                String   @id @default(uuid())
-  selected_symptoms Json? // Simpan array gejala, cth: ["Mual", "Pusing"]
-  complaintText     String? // Input manual chat dari HP
-  aiCustomRecipe    Json? // Format resep baru AI: {"ingredient_id": takaran_ml}
+  selected_symptoms Json? // Store symptom array, e.g.: ["Nausea", "Dizzy"]
+  complaintText     String? // Manual chat input from Mobile
+  aiCustomRecipe    Json? // New AI recipe format: {"ingredient_id": amount_ml}
   createdAt         DateTime @default(now())
 
   user_id String
@@ -163,7 +163,7 @@ model ConsultationHistory {
 }
 
 model Order {
-  id           String   @id @default(uuid()) // order_id yang bisa jadi referensi QRIS
+  id           String   @id @default(uuid()) // order_id that can be used as QRIS reference
   is_custom_ai Boolean  @default(false)
   total_price  Decimal
   status       String   @default("Pending") // Pending, Paid, Brewing, Completed, Failed
