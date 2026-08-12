@@ -159,21 +159,21 @@ export default function AIClient({ symptoms }: { symptoms: Symptom[] }) {
             </Button>
           </>
         ) : (
-          <div className="bg-gradient-to-b from-stone-900/90 to-stone-900/50 backdrop-blur-3xl rounded-[2rem] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-[2px] border-white/5 space-y-6 text-center">
+          <div className="bg-linear-to-b from-stone-900/90 to-stone-900/50 backdrop-blur-3xl rounded-[2rem] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-2 border-white/5 space-y-6 text-center">
             <div className="mx-auto w-16 h-16 bg-indigo-500/20 rounded-full flex items-center justify-center text-indigo-400 mb-4 border border-indigo-500/30 shadow-[0_0_30px_rgba(99,102,241,0.3)]">
               <SparklesIcon className="size-8" />
             </div>
             
             <h2 className="text-3xl font-serif font-normal tracking-wide text-white drop-shadow-md">Rekomendasi AI</h2>
             <p className="text-stone-300 bg-stone-950/50 p-5 rounded-2xl text-sm italic border border-white/5 font-light leading-relaxed">
-              "{result.explanation}"
+              &quot;{result.explanation}&quot;
             </p>
 
             <div className="relative w-full h-56 bg-stone-950 rounded-2xl overflow-hidden mt-6 mb-4 border border-white/5">
               {result.recipe.image ? (
                 <>
                   <Image src={result.recipe.image} alt={result.recipe.name} fill className="object-cover opacity-80" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-stone-900 to-transparent opacity-80" />
+                  <div className="absolute inset-0 bg-linear-to-t from-stone-900 to-transparent opacity-80" />
                 </>
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-stone-600">No Image</div>

@@ -34,15 +34,15 @@ export default function SetupClient() {
   };
 
   return (
-    <div className="flex h-screen w-screen flex-col items-center justify-center bg-gradient-to-br from-stone-900 via-stone-950 to-stone-900 p-8">
+    <div className="flex h-screen w-screen flex-col items-center justify-center bg-linear-to-br from-stone-900 via-stone-950 to-stone-900 p-8">
       {/* Decorative Background Elements */}
-      <div className="absolute top-[10%] left-[10%] size-[500px] rounded-full bg-amber-500/5 blur-[100px]" />
-      <div className="absolute bottom-[10%] right-[10%] size-[400px] rounded-full bg-emerald-500/5 blur-[80px]" />
+      <div className="absolute top-[10%] left-[10%] size-125 rounded-full bg-amber-500/5 blur-[100px]" />
+      <div className="absolute bottom-[10%] right-[10%] size-100 rounded-full bg-emerald-500/5 blur-[80px]" />
       
       <div className="relative z-10 w-full max-w-lg space-y-10">
         {/* Header */}
         <div className="flex flex-col items-center text-center space-y-4">
-          <div className="flex size-24 items-center justify-center rounded-3xl bg-gradient-to-br from-amber-400 to-amber-600 shadow-2xl shadow-amber-500/20">
+          <div className="flex size-24 items-center justify-center rounded-3xl bg-linear-to-br from-amber-400 to-amber-600 shadow-2xl shadow-amber-500/20">
             <LeafIcon className="size-12 text-amber-950" strokeWidth={2.5} />
           </div>
           <div className="space-y-2">

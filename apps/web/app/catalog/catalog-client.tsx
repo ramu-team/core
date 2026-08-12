@@ -75,14 +75,14 @@ export default function CatalogClient({ menus }: { menus: Menu[] }) {
 
       <div className="flex-1 px-4 py-6 space-y-6 max-w-md mx-auto w-full relative z-10">
         {menus.map((menu) => (
-          <div key={menu.id} className={`bg-gradient-to-b from-stone-900/90 to-stone-900/50 backdrop-blur-3xl rounded-[2rem] shadow-lg border-[2px] border-white/5 overflow-hidden flex flex-col ${!menu.isAvailable ? 'opacity-60 grayscale' : ''}`}>
+          <div key={menu.id} className={`bg-linear-to-b from-stone-900/90 to-stone-900/50 backdrop-blur-3xl rounded-[2rem] shadow-lg border-2 border-white/5 overflow-hidden flex flex-col ${!menu.isAvailable ? 'opacity-60 grayscale' : ''}`}>
             <div className="relative w-full h-56 bg-stone-950">
               {menu.image_url ? (
                 <Image src={menu.image_url} alt={menu.name} fill className="object-cover opacity-80" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-stone-600">No Image</div>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-stone-900 to-transparent opacity-80" />
+              <div className="absolute inset-0 bg-linear-to-t from-stone-900 to-transparent opacity-80" />
               {!menu.isAvailable && (
                 <div className="absolute top-4 right-4 bg-red-500/90 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg border border-white/20">
                   Habis

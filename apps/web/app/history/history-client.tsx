@@ -5,8 +5,12 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@ramu/ui/components/button';
 import { ChevronLeftIcon, LogInIcon, LogOutIcon, HistoryIcon, BookOpenIcon, SparklesIcon } from 'lucide-react';
 import { authClient } from '@/lib/auth/client';
+interface UserProps {
+  name?: string | null;
+  email?: string | null;
+}
 
-export default function HistoryClient({ user }: { user: any }) {
+export default function HistoryClient({ user }: { user: UserProps | null }) {
   const router = useRouter();
   const { history } = useUserStore();
 
@@ -21,7 +25,7 @@ export default function HistoryClient({ user }: { user: any }) {
 
       <div className="flex-1 px-4 py-6 space-y-6 max-w-md mx-auto w-full relative z-10">
         {/* Auth Section */}
-        <div className="bg-gradient-to-b from-stone-900/90 to-stone-900/50 backdrop-blur-3xl rounded-[2rem] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.5)] border-[2px] border-white/5 text-center">
+        <div className="bg-linear-to-b from-stone-900/90 to-stone-900/50 backdrop-blur-3xl rounded-[2rem] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.5)] border-2 border-white/5 text-center">
           {user ? (
             <div className="space-y-5">
               <div className="size-16 bg-amber-500/20 rounded-full mx-auto flex items-center justify-center text-amber-500 text-2xl font-bold shadow-[0_0_15px_rgba(245,158,11,0.2)] border border-amber-500/30">
@@ -72,7 +76,7 @@ export default function HistoryClient({ user }: { user: any }) {
           ) : (
             <div className="space-y-4">
               {history.map(item => (
-                <div key={item.id} className="bg-gradient-to-br from-stone-900 to-stone-950 rounded-[1.5rem] p-5 shadow-lg border border-white/5 flex gap-4 backdrop-blur-md transition-transform hover:scale-[1.02]">
+                <div key={item.id} className="bg-linear-to-br from-stone-900 to-stone-950 rounded-[1.5rem] p-5 shadow-lg border border-white/5 flex gap-4 backdrop-blur-md transition-transform hover:scale-[1.02]">
                   <div className={`size-12 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${
                     item.type === 'ai' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/20' : 'bg-amber-500/20 text-amber-500 border border-amber-500/20'
                   }`}>

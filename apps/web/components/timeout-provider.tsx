@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 export function TimeoutProvider({ children }: { children: React.ReactNode }) {
   const updateActivity = useUserStore((state) => state.updateActivity);
   const checkTimeout = useUserStore((state) => state.checkTimeout);
-  const activeSessionId = useUserStore((state) => state.activeSessionId);
   const router = useRouter();
 
   useEffect(() => {

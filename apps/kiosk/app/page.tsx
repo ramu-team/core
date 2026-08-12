@@ -42,7 +42,7 @@ export default function IdleScreen() {
         </motion.div>
         
         {/* Soft, simple gradient for text legibility on the left */}
-        <div className="absolute inset-0 bg-gradient-to-r from-stone-950 via-stone-950/60 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-stone-950 via-stone-950/60 to-transparent" />
         
         {/* Independent Animation: Elegant, Ultra-Thin Geometric Guilloche (Luxury Watch Style) */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none flex items-center justify-start pl-20">
@@ -50,7 +50,7 @@ export default function IdleScreen() {
             animate={{ rotate: 360 }}
             transition={{ duration: 90, repeat: Infinity, ease: 'linear' }}
             className="opacity-[0.15] text-amber-500/80 mix-blend-screen"
-          >
+          > 
             <svg width="1200" height="1200" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
               {/* Outer orbit */}
               <circle cx="50" cy="50" r="48" stroke="currentColor" strokeWidth="0.15" strokeDasharray="0.5 1" />
@@ -110,12 +110,12 @@ export default function IdleScreen() {
           transition={{ duration: 1, delay: 0.5 }}
           className="mt-16"
         >
-          <div className="relative inline-flex overflow-hidden rounded-full p-[2px] bg-gradient-to-r from-amber-500/50 via-amber-200/80 to-amber-500/50">
+          <div className="relative inline-flex overflow-hidden rounded-full p-0.5 bg-linear-to-r from-amber-500/50 via-amber-200/80 to-amber-500/50">
             {/* The sweeping light (Shimmer) */}
             <motion.div
               animate={{ x: ['-200%', '300%'] }}
               transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1 }}
-              className="absolute inset-0 z-20 w-1/3 skew-x-[45deg] bg-gradient-to-r from-transparent via-white/40 to-transparent"
+              className="absolute inset-0 z-20 w-1/3 skew-x-45 bg-linear-to-r from-transparent via-white/40 to-transparent"
             />
             
             <button className="relative z-10 inline-flex items-center gap-6 rounded-full bg-stone-950 px-12 py-5 transition-all hover:bg-stone-900 active:scale-[0.98]">

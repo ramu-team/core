@@ -21,8 +21,10 @@ function BrewingContent() {
 
   useEffect(() => {
     if (!machineId || (!menuId && !consultationId) || hasStarted) return;
-    setHasStarted(true);
-
+    setTimeout(() => {
+      setHasStarted(true);
+    }, 0)
+    
     let client: mqtt.MqttClient | null = null;
     let isMounted = true;
 
@@ -156,7 +158,7 @@ function BrewingContent() {
       <div className="relative z-10 flex flex-col items-center justify-center h-full w-full max-w-4xl gap-12">
         
         {/* Status Text Area (Flexible height to accommodate wrapping) */}
-        <div className="text-center flex flex-col items-center justify-end min-h-[160px] w-full px-8">
+        <div className="text-center flex flex-col items-center justify-end min-h-40 w-full px-8">
           <motion.h1 
             key={statusText}
             initial={{ opacity: 0, y: 10 }}
@@ -166,84 +168,84 @@ function BrewingContent() {
             {statusText}
           </motion.h1>
           {progress < 100 && (
-             <p className="text-2xl text-stone-300 font-light mt-4">
-               Mohon jangan tinggalkan mesin...
-             </p>
+            <p className="text-2xl text-stone-300 font-light mt-4">
+              Mohon jangan tinggalkan mesin...
+            </p>
           )}
         </div>
 
         {/* Dynamic Cup Visualizer */}
         <div className="relative flex flex-col items-center justify-center">
-           
-           {/* The Glass SVG Container */}
-           <div className="relative w-64 h-80 flex items-end justify-center pb-4">
-              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 250" fill="none" preserveAspectRatio="xMidYMid meet">
-                 <defs>
-                   {/* This clipPath perfectly traces the inner shape of the glass so liquid never bleeds out */}
-                   <clipPath id="glassClip">
-                     <path d="M42 30 L60 220 C65 238 135 238 140 220 L158 30 Z" />
-                   </clipPath>
-                   <linearGradient id="liquidGradient" x1="0" y1="0" x2="0" y2="1">
-                     <stop offset="0%" stopColor="#d97706" /> {/* amber-600 */}
-                     <stop offset="100%" stopColor="#f59e0b" /> {/* amber-500 */}
-                   </linearGradient>
-                 </defs>
+          
+          {/* The Glass SVG Container */}
+          <div className="relative w-64 h-80 flex items-end justify-center pb-4">
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 250" fill="none" preserveAspectRatio="xMidYMid meet">
+                <defs>
+                  {/* This clipPath perfectly traces the inner shape of the glass so liquid never bleeds out */}
+                  <clipPath id="glassClip">
+                    <path d="M42 30 L60 220 C65 238 135 238 140 220 L158 30 Z" />
+                  </clipPath>
+                  <linearGradient id="liquidGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#d97706" /> {/* amber-600 */}
+                    <stop offset="100%" stopColor="#f59e0b" /> {/* amber-500 */}
+                  </linearGradient>
+                </defs>
 
-                 {/* Back of the glass outline */}
-                 <path d="M40 30 L60 220 C65 240 135 240 140 220 L160 30" stroke="#fbbf24" strokeWidth="1" strokeOpacity="0.2" strokeLinejoin="round" />
+                {/* Back of the glass outline */}
+                <path d="M40 30 L60 220 C65 240 135 240 140 220 L160 30" stroke="#fbbf24" strokeWidth="1" strokeOpacity="0.2" strokeLinejoin="round" />
 
-                 {/* The Liquid Fill (Perfectly clipped to the glass shape) */}
-                 <g clipPath="url(#glassClip)">
-                   <g 
-                     style={{ transform: `translateY(${190 - (190 * (progress / 100))}px)` }} 
-                     className="transition-transform duration-[80ms] ease-linear"
-                   >
-                     {/* Body of liquid */}
-                     <rect x="0" y="30" width="200" height="250" fill="url(#liquidGradient)" fillOpacity="0.8" />
-                     
-                     {/* Wavy top surface (Continuous horizontal animation) */}
-                     {progress > 0 && progress < 100 && (
-                       <>
-                         <motion.path 
-                           animate={{ x: [0, -200] }}
-                           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                           d="M0 30 Q 50 15, 100 30 T 200 30 T 300 30 T 400 30 L 400 40 L 0 40 Z"
-                           fill="url(#liquidGradient)" fillOpacity="0.8"
-                         />
-                         <motion.path 
-                           animate={{ x: [0, -200] }}
-                           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                           d="M0 30 Q 50 15, 100 30 T 200 30 T 300 30 T 400 30"
-                           stroke="#fbbf24" strokeWidth="2" fill="none" strokeOpacity="0.9"
-                         />
-                       </>
-                     )}
-                   </g>
-                 </g>
+                {/* The Liquid Fill (Perfectly clipped to the glass shape) */}
+                <g clipPath="url(#glassClip)">
+                  <g 
+                    style={{ transform: `translateY(${190 - (190 * (progress / 100))}px)` }} 
+                    className="transition-transform duration-80 ease-linear"
+                  >
+                    {/* Body of liquid */}
+                    <rect x="0" y="30" width="200" height="250" fill="url(#liquidGradient)" fillOpacity="0.8" />
+                    
+                    {/* Wavy top surface (Continuous horizontal animation) */}
+                    {progress > 0 && progress < 100 && (
+                      <>
+                        <motion.path 
+                          animate={{ x: [0, -200] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                          d="M0 30 Q 50 15, 100 30 T 200 30 T 300 30 T 400 30 L 400 40 L 0 40 Z"
+                          fill="url(#liquidGradient)" fillOpacity="0.8"
+                        />
+                        <motion.path 
+                          animate={{ x: [0, -200] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                          d="M0 30 Q 50 15, 100 30 T 200 30 T 300 30 T 400 30"
+                          stroke="#fbbf24" strokeWidth="2" fill="none" strokeOpacity="0.9"
+                        />
+                      </>
+                    )}
+                  </g>
+                </g>
 
-                 {/* Front of the glass outline */}
-                 <ellipse cx="100" cy="30" rx="60" ry="10" stroke="#fbbf24" strokeWidth="4" />
-                 <path d="M40 30 L60 220 C65 240 135 240 140 220 L160 30" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                 {/* Glass Glare */}
-                 <path d="M50 50 L65 180" stroke="white" strokeWidth="3" strokeOpacity="0.3" strokeLinecap="round" />
-              </svg>
-              
-              {/* Steaming Bubbles */}
-              {progress > 50 && (
-                 <motion.div 
-                   animate={{ y: [0, -50], opacity: [0, 0.8, 0], scale: [0.5, 1] }} 
-                   transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }} 
-                   className="absolute top-[20%] left-1/2 size-4 rounded-full bg-amber-200 blur-[2px]"
-                 />
-              )}
-           </div>
+                {/* Front of the glass outline */}
+                <ellipse cx="100" cy="30" rx="60" ry="10" stroke="#fbbf24" strokeWidth="4" />
+                <path d="M40 30 L60 220 C65 240 135 240 140 220 L160 30" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                {/* Glass Glare */}
+                <path d="M50 50 L65 180" stroke="white" strokeWidth="3" strokeOpacity="0.3" strokeLinecap="round" />
+            </svg>
+            
+            {/* Steaming Bubbles */}
+            {progress > 50 && (
+                <motion.div 
+                  animate={{ y: [0, -50], opacity: [0, 0.8, 0], scale: [0.5, 1] }} 
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }} 
+                  className="absolute top-[20%] left-1/2 size-4 rounded-full bg-amber-200 blur-[2px]"
+                />
+            )}
+          </div>
 
-           {/* Percentage Text */}
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-full">
-              <span className="font-serif text-[5rem] font-bold text-white drop-shadow-[0_0_20px_rgba(0,0,0,0.8)]">
-                {progress}%
-              </span>
-           </div>
+          {/* Percentage Text */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-full">
+            <span className="font-serif text-[5rem] font-bold text-white drop-shadow-[0_0_20px_rgba(0,0,0,0.8)]">
+              {progress}%
+            </span>
+          </div>
 
         </div>
 

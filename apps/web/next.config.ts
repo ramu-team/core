@@ -3,7 +3,7 @@ import type { NextConfig } from "next"
 const nextConfig: NextConfig = {
   transpilePackages: ["@ramu/ui", "@ramu/db"],
   serverExternalPackages: ["@prisma/client"],
-  allowedDevOrigins: ["192.168.1.11"],
+  allowedDevOrigins: ["192.168.1.11","192.168.0.110"],
   images: {
     remotePatterns: [
       {

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useActionState } from 'react';
+import Image from 'next/image';
 import { saveMenuAction, toggleMenuStatusAction, deleteMenuAction } from './actions';
 import { Button } from '@ramu/ui/components/button';
 import { Input } from '@ramu/ui/components/input';
@@ -173,8 +174,8 @@ export default function MenuClient({ initialMenus, ingredientsList }: MenuClient
       header: "Photo",
       cell: ({ row }) => (
         row.original.image_url ? (
-          <div className="w-10 h-10 rounded-md overflow-hidden border border-white/10 shrink-0">
-            <img src={row.original.image_url} alt={row.original.name} className="w-full h-full object-cover" />
+          <div className="relative w-10 h-10 rounded-md overflow-hidden border border-white/10 shrink-0">
+            <Image src={row.original.image_url} alt={row.original.name} fill sizes="40px" className="object-cover" />
           </div>
         ) : (
           <div className="w-10 h-10 rounded-md bg-stone-900 border border-white/10 flex items-center justify-center text-[9px] text-muted-foreground italic shrink-0">
@@ -357,7 +358,7 @@ export default function MenuClient({ initialMenus, ingredientsList }: MenuClient
                 value={description}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
                 placeholder="Short description of this Jamu..."
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
+                className="flex min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
               />
             </div>
 
@@ -380,8 +381,15 @@ export default function MenuClient({ initialMenus, ingredientsList }: MenuClient
               <div className="flex flex-col gap-3">
                 {(selectedFileUrl || imageUrl) ? (
                   <div className="relative w-full h-40 rounded-lg overflow-hidden border border-white/10 group">
-                    <img src={selectedFileUrl || imageUrl} alt="Preview" className="object-cover w-full h-full" />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                    <Image 
+                      src={selectedFileUrl || imageUrl} 
+                      alt="Preview" 
+                      fill 
+                      sizes="(max-width: 768px) 100vw, 400px" 
+                      className="object-cover"
+                      unoptimized={!!selectedFileUrl}
+                    />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm z-10">
                       <Button type="button" variant="destructive" size="sm" onClick={handleRemoveImage}>
                         Remove Image
                       </Button>

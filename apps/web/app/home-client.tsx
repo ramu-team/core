@@ -4,9 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/store/user-store';
 import mqtt from 'mqtt';
-import { Button } from '@ramu/ui/components/button';
-import { BookOpenIcon, SparklesIcon, HistoryIcon, MapPinIcon } from 'lucide-react';
-import Image from 'next/image';
+import { BookOpenIcon, SparklesIcon, HistoryIcon } from 'lucide-react';
 
 export default function HomeClient({ urlSessionId, urlMachineId }: { urlSessionId?: string, urlMachineId?: string }) {
   const router = useRouter();
@@ -73,7 +71,7 @@ export default function HomeClient({ urlSessionId, urlMachineId }: { urlSessionI
       <div className="flex-1 px-6 py-8 space-y-6 max-w-md mx-auto w-full relative z-10">
         {/* Menu Buttons */}
         <button 
-          className="w-full text-left relative flex items-center overflow-hidden rounded-[2rem] bg-gradient-to-b from-stone-900/90 to-stone-900/50 backdrop-blur-3xl border-[2px] border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] p-5 focus:outline-none"
+          className="w-full text-left relative flex items-center overflow-hidden rounded-[2rem] bg-linear-to-b from-stone-900/90 to-stone-900/50 backdrop-blur-3xl border-2 border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] p-5 focus:outline-none"
           onClick={() => router.push('/catalog')}
         >
           <div className="size-14 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-500 shrink-0">
@@ -86,7 +84,7 @@ export default function HomeClient({ urlSessionId, urlMachineId }: { urlSessionI
         </button>
 
         <button 
-          className="w-full text-left relative flex items-center overflow-hidden rounded-[2rem] bg-gradient-to-b from-stone-900/90 to-stone-900/50 backdrop-blur-3xl border-[2px] border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] p-5 focus:outline-none"
+          className="w-full text-left relative flex items-center overflow-hidden rounded-[2rem] bg-linear-to-b from-stone-900/90 to-stone-900/50 backdrop-blur-3xl border-2 border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] p-5 focus:outline-none"
           onClick={() => router.push('/ai-consultation')}
         >
           <div className="size-14 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
@@ -99,7 +97,7 @@ export default function HomeClient({ urlSessionId, urlMachineId }: { urlSessionI
         </button>
 
         <button 
-          className="w-full text-left relative flex items-center overflow-hidden rounded-[2rem] bg-gradient-to-b from-stone-900/90 to-stone-900/50 backdrop-blur-3xl border-[2px] border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] p-5 focus:outline-none"
+          className="w-full text-left relative flex items-center overflow-hidden rounded-[2rem] bg-linear-to-b from-stone-900/90 to-stone-900/50 backdrop-blur-3xl border-2 border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] p-5 focus:outline-none"
           onClick={() => router.push('/history')}
         >
           <div className="size-14 rounded-full bg-stone-800/80 flex items-center justify-center text-stone-300 shrink-0 border border-white/5">

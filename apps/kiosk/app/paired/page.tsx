@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { ChevronLeftIcon, CheckIcon } from 'lucide-react';
 import { Button } from '@ramu/ui/components/button';
 import { motion } from 'framer-motion';
@@ -12,10 +12,7 @@ import { useKioskStore } from '@/store/kiosk-store';
 
 function PairedContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { machineId } = useKioskStore();
-  const consultationId = searchParams.get('consultationId');
-  const menu = searchParams.get('menu');
   const [status, setStatus] = useState<'waiting' | 'connected' | 'success'>('waiting');
   const [sessionId, setSessionId] = useState('');
   const [orderPayload, setOrderPayload] = useState<{menuId?: string, consultationId?: string}>({});
@@ -154,7 +151,7 @@ function PairedContent() {
                   fgColor="#1c1917" // stone-900
                 />
               ) : (
-                <div className="animate-pulse bg-stone-200 size-[300px] rounded-xl" />
+                <div className="animate-pulse bg-stone-200 size-75 rounded-xl" />
               )}
               
               {/* Elegant Scanning Laser Animation */}

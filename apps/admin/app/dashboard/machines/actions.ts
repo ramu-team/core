@@ -66,7 +66,7 @@ export async function saveMachineAction(
 
     let tanksConfig: { tankNumber: number; ingredientId: string; currentVolume: number; maxCapacity: number }[] = [];
     if (tanksRaw) {
-      try { tanksConfig = JSON.parse(tanksRaw); } catch (e) { console.error('Failed to parse tanks'); }
+      try { tanksConfig = JSON.parse(tanksRaw); } catch (e) { console.error('Failed to parse tanks', e); }
     }
 
     const { data: session } = await auth.getSession();
@@ -115,6 +115,53 @@ export async function saveMachineAction(
     return { success: true, timestamp: Date.now() };
   } catch (error: unknown) {
     console.error('[saveMachineAction] Error:', error);
+    return { error: error instanceof Error ? error.message : 'An unexpected error occurred.' };
+  }
+}
+
+export async function deleteMachineAction(
+  prevState: { error?: string; success?: boolean; timestamp?: number } | null,
+  formData: FormData
+) {
+  void prevState;
+  try {
+    const machineId = formData.get('machineId') as string;
+
+    const { data: session } = await auth.getSession();
+    if (!session?.user) {
+      return { error: 'Unauthorized.' };
+    }
+
+    if (!machineId) {
+      return { error: 'Machine ID is missing.' };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // Delete associated machine stocks first to avoid foreign key constraint errors
+      await tx.machineStock.deleteMany({ where: { machine_id: machineId } });
+      
+      // Attempt to delete the machine
+      // This might throw if there are orders/consultations tied to it without cascading delete
+      await tx.machine.delete({
+        where: { id: machineId }
+      });
+    });
+
+    await logAdminAction({
+      adminId: session.user.id,
+      action: 'DELETE_MACHINE',
+      entity: 'Machine',
+      entityId: machineId,
+      details: { deletedAt: new Date().toISOString() },
+    });
+
+    revalidatePath('/dashboard/machines');
+    return { success: true, timestamp: Date.now() };
+  } catch (error: unknown) {
+    console.error('[deleteMachineAction] Error:', error);
+    if (error instanceof Error && error.message.includes('Foreign key constraint failed')) {
+      return { error: 'Gagal menghapus mesin: Terdapat riwayat pesanan atau konsultasi yang terkait dengan mesin ini.' };
+    }
     return { error: error instanceof Error ? error.message : 'An unexpected error occurred.' };
   }
 }

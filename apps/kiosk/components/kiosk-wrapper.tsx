@@ -101,7 +101,7 @@ export function KioskWrapper({ children }: { children: React.ReactNode }) {
         }
       `}</style>
       {maintenanceMsg && (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-stone-950/95 backdrop-blur-xl text-center">
+        <div className="fixed inset-0 z-9999 flex flex-col items-center justify-center bg-stone-950/95 backdrop-blur-xl text-center">
           <div className="rounded-full bg-red-500/10 p-8 border border-red-500/20 mb-8 animate-pulse">
             <AlertTriangleIcon className="size-24 text-red-500" />
           </div>

@@ -63,7 +63,7 @@ export default function AuditLogsClient({ logs }: { logs: AuditLog[] }) {
         <div className="flex flex-col gap-1">
           <span className="text-sm font-semibold">{row.original.entity}</span>
           {row.original.entity_id && (
-            <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px]">
+            <span className="font-mono text-[10px] text-muted-foreground truncate max-w-30">
               ID: {row.original.entity_id}
             </span>
           )}
@@ -74,7 +74,7 @@ export default function AuditLogsClient({ logs }: { logs: AuditLog[] }) {
       accessorKey: "details",
       header: "Details",
       cell: ({ row }) => (
-        <div className="max-w-[300px] text-xs text-muted-foreground whitespace-pre-wrap overflow-hidden text-ellipsis">
+        <div className="max-w-75 text-xs text-muted-foreground whitespace-pre-wrap overflow-hidden text-ellipsis">
           {row.original.details ? JSON.stringify(row.original.details) : '-'}
         </div>
       ),
@@ -84,7 +84,7 @@ export default function AuditLogsClient({ logs }: { logs: AuditLog[] }) {
   return (
     <div className="flex flex-col gap-8 p-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent flex items-center gap-3">
+        <h1 className="text-3xl font-extrabold tracking-tight bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent flex items-center gap-3">
           <ShieldCheckIcon className="size-8 text-primary" /> Audit Logs
         </h1>
         <p className="text-muted-foreground text-sm font-medium">

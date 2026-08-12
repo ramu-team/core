@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth/client';
 
@@ -14,7 +14,7 @@ export function IdleTimeoutProvider({
   const router = useRouter();
   const timeoutRef = useRef<NodeJS.Timeout>(null);
 
-  const resetTimeout = () => {
+  const resetTimeout = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(async () => {
       // Clear session from Neon Managed Auth
@@ -22,7 +22,7 @@ export function IdleTimeoutProvider({
       // Redirect to login with expired flag
       router.push('/login?expired=1');
     }, timeoutMinutes * 60 * 1000);
-  };
+  }, [timeoutMinutes, router]);
 
   useEffect(() => {
     // Setup initial timeout
@@ -36,7 +36,7 @@ export function IdleTimeoutProvider({
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       events.forEach(event => document.removeEventListener(event, resetTimeout));
     };
-  }, [timeoutMinutes]); // Re-bind if timeoutMinutes changes
+  }, [timeoutMinutes, resetTimeout]); // Re-bind if timeoutMinutes changes
 
   return <>{children}</>;
 }

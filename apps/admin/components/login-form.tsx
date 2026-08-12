@@ -16,7 +16,6 @@ import {
 } from "@ramu/ui/components/card"
 import {
   Field,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from "@ramu/ui/components/field"
@@ -38,22 +37,19 @@ export function LoginForm({
     const password = formData.get("password") as string
 
     toast.promise(
-      new Promise(async (resolve, reject) => {
+      (async () => {
         try {
           const { error } = await authClient.signIn.email({ email, password })
           if (error) {
-            reject(new Error(error.message || "Login gagal. Silakan coba lagi."))
-          } else {
-            await recordLogin(email)
-            resolve("Login sukses!")
-            router.push("/dashboard")
+            throw new Error(error.message || "Login gagal. Silakan coba lagi.")
           }
-        } catch (err) {
-          reject(new Error("Terjadi kesalahan jaringan."))
+          await recordLogin(email)
+          router.push("/dashboard")
+          return "Login sukses!"
         } finally {
           setIsLoading(false)
         }
-      }),
+      })(),
       {
         loading: "Mencoba masuk...",
         success: "Login berhasil! Mengalihkan...",

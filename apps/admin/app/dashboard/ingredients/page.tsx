@@ -30,7 +30,7 @@ export default async function IngredientsPage(props: {
   return (
     <div className="flex flex-col gap-8 p-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent flex items-center gap-3">
+        <h1 className="text-3xl font-extrabold tracking-tight bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent flex items-center gap-3">
           <FlaskConicalIcon className="size-8 text-primary" /> Raw Ingredients
         </h1>
         <p className="text-muted-foreground text-sm font-medium">

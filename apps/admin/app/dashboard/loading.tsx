@@ -8,7 +8,7 @@ export default function DashboardLoading() {
         <Skeleton className="aspect-video rounded-xl" />
         <Skeleton className="aspect-video rounded-xl" />
       </div>
-      <Skeleton className="min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
+      <Skeleton className="min-h-screen flex-1 rounded-xl md:min-h-min" />
     </div>
   )
 }

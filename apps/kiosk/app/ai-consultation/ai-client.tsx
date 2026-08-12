@@ -241,7 +241,7 @@ export default function AIClient({ symptoms }: { symptoms: Symptom[] }) {
                               whileTap={{ scale: 0.95 }}
                               key={symptom.id}
                               onClick={() => toggleSymptom(symptom.id)}
-                              className={`group relative flex h-[110px] w-full items-center gap-6 rounded-[2rem] border-2 px-6 shadow-md transition-all duration-300 ${
+                              className={`group relative flex h-27.5 w-full items-center gap-6 rounded-[2rem] border-2 px-6 shadow-md transition-all duration-300 ${
                                 isSelected
                                   ? 'border-amber-500 bg-amber-500/15 text-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.15)]'
                                   : 'border-white/20 bg-white/5 backdrop-blur-md text-stone-300'

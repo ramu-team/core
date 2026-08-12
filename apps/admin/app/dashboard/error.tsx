@@ -22,7 +22,7 @@ export default function Error({
         <AlertCircle className="h-10 w-10" />
       </div>
       <h2 className="text-2xl font-bold tracking-tight">Terjadi Kesalahan!</h2>
-      <p className="text-muted-foreground max-w-[500px]">
+      <p className="text-muted-foreground max-w-125">
         Sistem mendeteksi adanya kendala saat memuat halaman ini. Silakan coba muat ulang atau kembali ke halaman sebelumnya.
       </p>
       <div className="mt-4 flex gap-2">

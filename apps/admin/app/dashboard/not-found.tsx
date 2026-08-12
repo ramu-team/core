@@ -16,7 +16,7 @@ export default function NotFound() {
           <h2 className="text-2xl font-semibold tracking-tight">
             Halaman Tidak Ditemukan
           </h2>
-          <p className="max-w-[500px] text-muted-foreground">
+          <p className="max-w-125 text-muted-foreground">
             Maaf, kami tidak dapat menemukan halaman yang Anda cari. Halaman mungkin telah dipindahkan atau dihapus.
           </p>
         </div>

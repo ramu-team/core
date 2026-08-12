@@ -58,7 +58,7 @@ export default function CatalogClient() {
 
   const handleOrder = (menuId: string, isAvailable?: boolean) => {
     if (isAvailable === false) return;
-    router.push(`/paired?menu=${menuId}`);
+    router.push(`/brewing?menu=${menuId}`);
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -107,10 +107,10 @@ export default function CatalogClient() {
           src="/hero-bg-traditional.png"
           alt="Background"
           fill
-          className="object-cover object-center scale-110 blur-[4px] opacity-40"
+          className="object-cover object-center scale-110 blur-xs opacity-40"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-stone-950/80 via-stone-950/60 to-stone-950" />
+        <div className="absolute inset-0 bg-linear-to-b from-stone-950/80 via-stone-950/60 to-stone-950" />
         
         {/* Consistent Independent Animation: Elegant Guilloche */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none flex items-center justify-start pl-20">
@@ -209,10 +209,10 @@ export default function CatalogClient() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                 key={menu.id} 
-                className={`w-[420px] shrink-0 relative flex flex-col overflow-hidden rounded-[3rem] bg-gradient-to-b from-stone-900/90 to-stone-900/50 backdrop-blur-3xl border-[2px] border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.6)] snap-start ${menu.isAvailable === false ? 'opacity-50 grayscale' : ''}`}
+                className={`w-105 shrink-0 relative flex flex-col overflow-hidden rounded-[3rem] bg-linear-to-b from-stone-900/90 to-stone-900/50 backdrop-blur-3xl border-2 border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.6)] snap-start ${menu.isAvailable === false ? 'opacity-50 grayscale' : ''}`}
               >
                 {/* Full Bleed Image Container */}
-                <div className="relative w-full h-[280px] bg-stone-950 shrink-0 overflow-hidden">
+                <div className="relative w-full h-70 bg-stone-950 shrink-0 overflow-hidden">
                   <motion.div
                     animate={{ scale: [1, 1.08, 1] }}
                     transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -229,8 +229,8 @@ export default function CatalogClient() {
                   </motion.div>
                   
                   {/* Rich Vignette & Bottom Blend */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-stone-900 via-stone-900/20 to-black/40" />
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-transparent h-24" />
+                  <div className="absolute inset-0 bg-linear-to-t from-stone-900 via-stone-900/20 to-black/40" />
+                  <div className="absolute inset-0 bg-linear-to-b from-black/50 to-transparent h-24" />
                   
                   {/* Status Badge */}
                   <div className={`absolute top-6 right-6 rounded-full px-5 py-2 border shadow-xl backdrop-blur-md ${menu.isAvailable === false ? 'bg-red-500/80 border-red-500' : 'bg-black/50 border-white/10'}`}>
@@ -274,10 +274,10 @@ export default function CatalogClient() {
                         size="lg"
                         disabled={menu.isAvailable === false}
                         onClick={() => handleOrder(menu.id, menu.isAvailable)}
-                        className={`h-20 w-full rounded-full text-[1.4rem] tracking-wide font-extrabold shadow-[0_5px_20px_rgba(251,191,36,0.3)] border-b-[5px] active:border-b-0 active:translate-y-[5px] transition-all
+                        className={`h-20 w-full rounded-full text-[1.4rem] tracking-wide font-extrabold shadow-[0_5px_20px_rgba(251,191,36,0.3)] border-b-[5px] active:border-b-0 active:translate-y-1.25 transition-all
                           ${menu.isAvailable === false 
                             ? 'bg-stone-800 text-stone-500 border-stone-900 shadow-none' 
-                            : 'bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-stone-950 border-amber-700'}`}
+                            : 'bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 text-stone-950 border-amber-700'}`}
                       >
                         {menu.isAvailable === false ? 'TIDAK TERSEDIA' : 'RAMU SEKARANG'}
                       </Button>

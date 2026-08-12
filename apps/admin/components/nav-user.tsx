@@ -91,16 +91,16 @@ export function NavUser({
             <DropdownMenuItem
               onClick={() => {
                 toast.promise(
-                  new Promise(async (resolve, reject) => {
+                  (async () => {
                     try {
                       const { authClient } = await import("@/lib/auth/client")
                       await authClient.signOut()
-                      resolve("Logout sukses!")
                       router.push("/login")
-                    } catch (err) {
-                      reject(new Error("Gagal logout."))
+                      return "Logout sukses!"
+                    } catch {
+                      throw new Error("Gagal logout.")
                     }
-                  }),
+                  })(),
                   {
                     loading: "Keluar dari akun...",
                     success: "Berhasil logout!",

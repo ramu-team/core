@@ -66,7 +66,7 @@ export async function recommendAIAction({
     }));
 
     // 3. Prompt Gemini
-    let promptText = `
+    const promptText = `
     Anda adalah AI Mixologist Jamu Tradisional di sebuah mesin Kiosk.
     Tugas Anda adalah merekomendasikan SATU menu jamu yang PALING TEPAT berdasarkan keluhan pelanggan.
     
@@ -96,12 +96,18 @@ export async function recommendAIAction({
 
     const chosenMenu = availableMenus.find(m => m.id === result.recommendedMenuId);
     if (!chosenMenu) {
-       throw new Error('AI merekomendasikan menu yang tidak valid');
+      throw new Error('AI merekomendasikan menu yang tidak valid');
     }
 
     // 4. Save to Database
+    let user = await prisma.user.findFirst({ where: { is_guest: true } });
+    if (!user) {
+      user = await prisma.user.create({ data: { is_guest: true } });
+    }
+
     const aiConsultation = await prisma.consultationHistory.create({
       data: {
+        user_id: user.id,
         machine_id: machineId,
         selected_symptoms: symptoms,
         complaintText: customCondition,
@@ -112,8 +118,8 @@ export async function recommendAIAction({
             description: chosenMenu.description,
             image: chosenMenu.image_url,
             ingredients: chosenMenu.recipes.map(r => ({
-               ingredient_id: r.ingredient_id,
-               amountMl: r.amountMl
+              ingredient_id: r.ingredient_id,
+              amountMl: r.amountMl
             }))
           }
         }
@@ -134,8 +140,9 @@ export async function recommendAIAction({
       }
     };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('AI Recommendation Error:', error);
-    return { success: false, error: error.message || 'Terjadi kesalahan saat menghubungi AI' };
+    const msg = error instanceof Error ? error.message : 'Terjadi kesalahan saat menghubungi AI';
+    return { success: false, error: msg };
   }
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useActionState } from 'react';
-import { generateActivationCodeAction, saveMachineAction } from './actions';
+import { generateActivationCodeAction, saveMachineAction, deleteMachineAction } from './actions';
 import { Button } from '@ramu/ui/components/button';
 import { Input } from '@ramu/ui/components/input';
 import { toast } from 'sonner';
@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from '@ramu/ui/components/card';
 import { Label } from '@ramu/ui/components/label';
-import { Edit3Icon, KeyIcon, ActivityIcon } from 'lucide-react';
+import { Edit3Icon, KeyIcon, ActivityIcon, Trash2Icon } from 'lucide-react';
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
@@ -30,6 +30,15 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@ramu/ui/components/select";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@ramu/ui/components/alert-dialog";
 
 interface Machine {
   id: string;
@@ -63,6 +72,7 @@ interface MachinesClientProps {
 export default function MachinesClient({ initialMachines, initialCodes, ingredientsList }: MachinesClientProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingMachine, setEditingMachine] = useState<Machine | null>(null);
+  const [machineToDelete, setMachineToDelete] = useState<Machine | null>(null);
 
   const [locationName, setLocationName] = useState('');
   const [status, setStatus] = useState('Offline');
@@ -71,6 +81,7 @@ export default function MachinesClient({ initialMachines, initialCodes, ingredie
 
   const [genState, genFormAction, isGenPending] = useActionState(generateActivationCodeAction, null);
   const [saveState, saveFormAction, isSavePending] = useActionState(saveMachineAction, null);
+  const [deleteState, deleteFormAction, isDeletePending] = useActionState(deleteMachineAction, null);
 
   useEffect(() => {
     if (saveState?.success) {
@@ -90,6 +101,17 @@ export default function MachinesClient({ initialMachines, initialCodes, ingredie
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [genState?.timestamp]);
+
+  useEffect(() => {
+    if (deleteState?.success) {
+      toast.success('Mesin berhasil dihapus.');
+      setTimeout(() => {setMachineToDelete(null);}, 0)
+    }
+    if (deleteState?.error) {
+      toast.error(deleteState.error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deleteState?.timestamp]);
 
   const handleOpenEdit = (machine: Machine) => {
     setEditingMachine(machine);
@@ -187,7 +209,7 @@ export default function MachinesClient({ initialMachines, initialCodes, ingredie
           return <span className="text-xs text-muted-foreground italic">Unconfigured</span>;
         }
         return (
-          <div className="flex flex-col gap-1.5 min-w-[200px]">
+          <div className="flex flex-col gap-1.5 min-w-50">
             {stocks.sort((a,b) => a.tankNumber - b.tankNumber).map(tank => {
               const percent = tank.max_capacity > 0 ? (tank.current_volume / tank.max_capacity) * 100 : 0;
               const isLow = percent < 15;
@@ -236,6 +258,16 @@ export default function MachinesClient({ initialMachines, initialCodes, ingredie
             title="Edit Machine"
           >
             <Edit3Icon className="size-3.5" />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 w-7 text-red-500 hover:text-red-400 hover:bg-red-500/10 border-red-500/20 transition-colors p-0"
+            onClick={() => setMachineToDelete(row.original)}
+            type="button"
+            title="Delete Machine"
+          >
+            <Trash2Icon className="size-3.5" />
           </Button>
         </div>
       ),
@@ -353,7 +385,7 @@ export default function MachinesClient({ initialMachines, initialCodes, ingredie
 
       {/* Edit Machine Sheet */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="sm:max-w-md w-full overflow-y-auto max-h-[100dvh]">
+        <SheetContent className="sm:max-w-md w-full overflow-y-auto max-h-dvh">
           <SheetHeader className="mb-6">
             <SheetTitle>Edit Machine</SheetTitle>
             <SheetDescription>
@@ -496,6 +528,30 @@ export default function MachinesClient({ initialMachines, initialCodes, ingredie
           </form>
         </SheetContent>
       </Sheet>
+
+      {/* Delete Confirmation Alert Dialog */}
+      <AlertDialog open={!!machineToDelete} onOpenChange={(open) => {
+        if (!open) setMachineToDelete(null);
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Mesin</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus mesin <strong>{machineToDelete?.registration_code}</strong>?
+              Tindakan ini tidak dapat dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <form action={deleteFormAction}>
+            <input type="hidden" name="machineId" value={machineToDelete?.id || ''} />
+            <AlertDialogFooter>
+              <AlertDialogCancel type="button" disabled={isDeletePending}>Batal</AlertDialogCancel>
+              <Button type="submit" variant="destructive" disabled={isDeletePending}>
+                {isDeletePending ? 'Menghapus...' : 'Ya, Hapus'}
+              </Button>
+            </AlertDialogFooter>
+          </form>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
