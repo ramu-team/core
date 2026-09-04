@@ -1,16 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Menu, X, UserCircleIcon, LogOutIcon, HistoryIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/store/user-store';
 import { authClient } from '@/lib/auth/client';
 
 export default function Navbar() {
+  const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isLoggedIn, userName, setUser, logout } = useUserStore();
   const [mounted, setMounted] = useState(false);
+  const isLoggingOut = useRef(false);
   const { data: sessionData, isPending } = authClient.useSession();
 
   useEffect(() => {
@@ -18,7 +21,7 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    if (sessionData?.user && !isLoggedIn) {
+    if (sessionData?.user && !isLoggedIn && !isLoggingOut.current) {
       setUser(sessionData.user.name || '', sessionData.user.email || '');
     }
   }, [sessionData, isLoggedIn, setUser]);
@@ -60,11 +63,12 @@ export default function Navbar() {
                       <HistoryIcon className="size-4" />
                       Riwayat Pesanan
                     </Link>
-                    <button 
+                    <button
                       onClick={async () => {
+                        isLoggingOut.current = true;
                         await authClient.signOut();
                         logout();
-                        window.location.reload();
+                        window.location.href = '/';
                       }}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-300 hover:bg-white/5 hover:text-red-400 transition-colors text-left"
                     >
@@ -74,7 +78,7 @@ export default function Navbar() {
                   </div>
                 </div>
                 <Link href="/app" className="bg-amber-500 hover:bg-amber-400 text-stone-950 px-6 py-2 rounded-full font-bold transition-all hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                  Buka Dasbor
+                  Pesan Jamu
                 </Link>
               </div>
             ) : (
@@ -125,10 +129,11 @@ export default function Navbar() {
                   </Link>
                   <button 
                     onClick={async () => {
+                      isLoggingOut.current = true;
                       await authClient.signOut();
                       logout();
                       setIsMobileMenuOpen(false);
-                      window.location.reload();
+                      window.location.href = '/';
                     }}
                     className="flex items-center gap-3 text-stone-300 hover:text-red-400 hover:bg-red-500/10 p-4 rounded-xl transition-colors border border-transparent hover:border-red-500/10 text-left"
                   >
@@ -142,7 +147,7 @@ export default function Navbar() {
             )}
             
             <Link href="/app" onClick={() => setIsMobileMenuOpen(false)} className="block w-full text-center bg-amber-500 hover:bg-amber-400 text-stone-950 px-6 py-4 rounded-xl font-bold transition-all mt-6 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
-              {mounted && isLoggedIn ? 'Buka Dasbor' : 'Scan Kiosk'}
+              {mounted && isLoggedIn ? 'Pesan Jamu' : 'Scan Kiosk'}
             </Link>
           </div>
         </div>

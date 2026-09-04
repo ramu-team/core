@@ -7,7 +7,9 @@ import { OrderHistoryItem } from '@/store/user-store';
 
 export async function syncUser() {
   const { data: session } = await auth.getSession({
-    headers: await headers() // Next.js 15+ headers await
+    fetchOptions: {
+      headers: await headers() // Next.js 15+ headers await
+    }
   });
   
   if (!session?.user) {

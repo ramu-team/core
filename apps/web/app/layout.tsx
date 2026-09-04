@@ -6,9 +6,14 @@ import { cn } from "@ramu/ui/lib/utils"
 import NextTopLoader from 'nextjs-toploader'
 import { TimeoutProvider } from "@/components/timeout-provider"
 
+import { Metadata } from "next"
+
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
-
+export const metadata: Metadata = {
+  title: "Ramu - Jamu Tradisional Modern",
+  description: "Pesan jamu tradisional dengan mudah melalui Kiosk pintar Ramu.",
+}
 export default function RootLayout({
   children,
 }: Readonly<{

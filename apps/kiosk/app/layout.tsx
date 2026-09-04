@@ -13,6 +13,13 @@ const fontMono = Geist_Mono({
   variable: "--font-mono",
 })
 
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Ramu Kiosk",
+  description: "Layar pintar pembuat jamu otomatis Ramu.",
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{

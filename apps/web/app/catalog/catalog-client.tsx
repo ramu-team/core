@@ -20,7 +20,7 @@ interface Menu {
 
 export default function CatalogClient({ menus }: { menus: Menu[] }) {
   const router = useRouter();
-  const { activeSessionId, addHistory } = useUserStore();
+  const { activeSessionId, activeMachineId, addHistory } = useUserStore();
   const [orderingId, setOrderingId] = useState<string | null>(null);
   const [successId, setSuccessId] = useState<string | null>(null);
 

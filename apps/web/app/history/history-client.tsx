@@ -70,9 +70,9 @@ export default function HistoryClient({ user }: { user: UserProps | null }) {
               <Button
                 variant="outline"
                 className="w-full text-red-400 border-red-500/30 bg-red-500/10 hover:bg-red-500/20 hover:text-red-300 rounded-xl h-12"
-                onClick={() => {
-                  authClient.signOut();
-                  window.location.reload();
+                onClick={async () => {
+                  await authClient.signOut();
+                  router.push('/');
                 }}
               >
                 <LogOutIcon className="size-5 mr-2" /> Keluar
