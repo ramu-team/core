@@ -15,7 +15,7 @@ function PairedContent() {
   const { machineId } = useKioskStore();
   const [status, setStatus] = useState<'waiting' | 'connected' | 'success'>('waiting');
   const [sessionId, setSessionId] = useState('');
-  const [orderPayload, setOrderPayload] = useState<{menuId?: string, consultationId?: string}>({});
+  const [orderPayload, setOrderPayload] = useState<{menuId?: string, consultationId?: string, orderId?: string}>({});
   const webUrl = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
 
   useEffect(() => {
@@ -59,10 +59,13 @@ function PairedContent() {
           const payload = JSON.parse(message.toString());
           if (payload.status === 'connected') {
             setStatus('connected');
+          } else if (payload.status === 'disconnected') {
+            router.push('/');
           } else if (payload.status === 'brew') {
             setOrderPayload({ 
               menuId: payload.menuId, 
-              consultationId: payload.consultationId 
+              consultationId: payload.consultationId,
+              orderId: payload.orderId
             });
             setStatus('success');
           }
@@ -95,11 +98,27 @@ function PairedContent() {
         if (orderPayload.consultationId) targetUrl += `?consultationId=${orderPayload.consultationId}`;
         else if (orderPayload.menuId) targetUrl += `?menu=${orderPayload.menuId}`;
         
+        // Add orderId to the URL if available
+        if (orderPayload.orderId) targetUrl += `&orderId=${orderPayload.orderId}`;
+        
         router.push(targetUrl); // Redirect to brewing screen
       }, 2500);
       return () => clearTimeout(t3);
     }
   }, [status, router, orderPayload]);
+
+  useEffect(() => {
+    // Timeout of 5 minutes if stuck on "connected" state without brewing
+    let timeout: NodeJS.Timeout;
+    if (status === 'connected') {
+      timeout = setTimeout(() => {
+        router.push('/');
+      }, 300000);
+    }
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [status, router]);
 
   const qrUrl = `${webUrl}/app?session=${sessionId}${machineId ? `&machineId=${machineId}` : ''}`;
 

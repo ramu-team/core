@@ -43,12 +43,18 @@ export default function CatalogClient({ menus }: { menus: Menu[] }) {
     const topic = `${topicPrefix}/pair/${activeSessionId}`;
     
     client.on('connect', () => {
-      client.publish(topic, JSON.stringify({ status: 'brew', menuId: menu.id }));
-      client.end();
-
-      // Save to database if logged in, otherwise save to lazy register
+      // Save to database first
       import('@/app/actions/history-actions').then(({ saveOrder }) => {
         saveOrder(activeMachineId || 'unknown', menu.id, (menu as any).price || 0).then(res => {
+          
+          const payload: any = { status: 'brew', menuId: menu.id };
+          if (res.success && res.orderId) {
+            payload.orderId = res.orderId;
+          }
+
+          client.publish(topic, JSON.stringify(payload));
+          client.end();
+
           if (!res.success) {
             // Fallback to local history
             const historyItem: OrderHistoryItem = {
@@ -60,15 +66,15 @@ export default function CatalogClient({ menus }: { menus: Menu[] }) {
             };
             addHistory(historyItem);
           }
+
+          setOrderingId(null);
+          setSuccessId(menu.id);
+          
+          setTimeout(() => {
+            router.push('/');
+          }, 3000);
         });
       });
-
-      setOrderingId(null);
-      setSuccessId(menu.id);
-      
-      setTimeout(() => {
-        router.push('/');
-      }, 3000);
     });
   };
 
@@ -76,7 +82,7 @@ export default function CatalogClient({ menus }: { menus: Menu[] }) {
     <KioskGuard>
       <div className="flex flex-col min-h-screen">
         <div className="bg-stone-950/80 backdrop-blur-md sticky top-0 z-50 flex items-center px-4 py-4 shadow-sm border-b border-white/5">
-        <Button variant="ghost" size="icon" onClick={() => router.push('/')} className="rounded-full text-stone-300 hover:text-white hover:bg-white/10">
+        <Button variant="ghost" size="icon" onClick={() => router.push('/app')} className="rounded-full text-stone-300 hover:text-white hover:bg-white/10">
           <ChevronLeftIcon className="size-6" />
         </Button>
         <h1 className="text-xl font-serif font-bold ml-2 text-white">Katalog Jamu</h1>

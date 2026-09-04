@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/store/user-store';
 import mqtt from 'mqtt';
@@ -11,9 +11,10 @@ import QrScanner from '@/components/qr-scanner';
 
 export default function AppClient({ urlSessionId, urlMachineId }: { urlSessionId?: string, urlMachineId?: string }) {
   const router = useRouter();
-  const { activeSessionId, setSession, isLoggedIn, userName } = useUserStore();
+  const { activeSessionId, activeMachineId, setSession, clearSession, isLoggedIn, userName } = useUserStore();
   const [mounted, setMounted] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const mqttClientRef = useRef<mqtt.MqttClient | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -38,6 +39,7 @@ export default function AppClient({ urlSessionId, urlMachineId }: { urlSessionId
     const password = process.env.NEXT_PUBLIC_MQTT_PASSWORD;
     
     const client = mqtt.connect(brokerUrl, { username, password });
+    mqttClientRef.current = client;
     const topic = `${topicPrefix}/pair/${currentSession}`;
 
     client.on('connect', () => {
@@ -122,12 +124,28 @@ export default function AppClient({ urlSessionId, urlMachineId }: { urlSessionId
           </div>
           
           {activeSessionId ? (
-            <div className="flex items-center gap-3 bg-stone-900/60 px-5 py-2.5 rounded-full border border-emerald-500/30 backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.15)]">
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-              </span>
-              <span className="text-sm font-medium text-emerald-400 tracking-wide">Terhubung ke Mesin</span>
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex items-center gap-3 bg-stone-900/60 px-5 py-2.5 rounded-full border border-emerald-500/30 backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <span className="text-sm font-medium text-emerald-400 tracking-wide">Terhubung ke Mesin</span>
+              </div>
+              <button 
+                onClick={() => {
+                  if (mqttClientRef.current && activeSessionId) {
+                    const topicPrefix = process.env.NEXT_PUBLIC_MQTT_TOPIC_PREFIX || 'ramu-kiosk-prod';
+                    const topic = `${topicPrefix}/pair/${activeSessionId}`;
+                    mqttClientRef.current.publish(topic, JSON.stringify({ status: 'disconnected' }));
+                  }
+                  clearSession();
+                  router.push('/');
+                }} 
+                className="text-xs text-red-400 hover:text-red-300 underline underline-offset-2 transition-colors font-medium"
+              >
+                Putuskan Hubungan
+              </button>
             </div>
           ) : (
             <div className="flex items-center gap-3 bg-stone-900/60 px-5 py-2.5 rounded-full border border-red-500/30 backdrop-blur-md">
@@ -176,7 +194,7 @@ export default function AppClient({ urlSessionId, urlMachineId }: { urlSessionId
             {/* Menu Buttons */}
             <button 
               className="group w-full text-left relative flex items-center overflow-hidden rounded-[2rem] bg-stone-900/60 backdrop-blur-xl border border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.3)] p-5 focus:outline-none hover:bg-stone-900 transition-all hover:border-amber-500/30"
-              onClick={() => router.push('/catalog')}
+              onClick={() => router.push(`/catalog?machineId=${activeMachineId}`)}
             >
               <div className="size-14 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0 group-hover:scale-110 group-hover:bg-amber-500/20 transition-all">
                 <BookOpenIcon className="size-7" />
@@ -189,7 +207,7 @@ export default function AppClient({ urlSessionId, urlMachineId }: { urlSessionId
 
             <button 
               className="group w-full text-left relative flex items-center overflow-hidden rounded-[2rem] bg-stone-900/60 backdrop-blur-xl border border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.3)] p-5 focus:outline-none hover:bg-stone-900 transition-all hover:border-indigo-500/30"
-              onClick={() => router.push('/ai-consultation')}
+              onClick={() => router.push(`/ai-consultation?machineId=${activeMachineId}`)}
             >
               <div className="size-14 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0 group-hover:scale-110 group-hover:bg-indigo-500/20 transition-all">
                 <SparklesIcon className="size-7" />

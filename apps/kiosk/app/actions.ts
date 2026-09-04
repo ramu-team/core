@@ -81,3 +81,16 @@ export async function deductCupAction(machineId: string) {
     return { error: 'Gagal mengurangi stok cup.' };
   }
 }
+
+export async function completeOrderAction(orderId: string) {
+  try {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { status: 'Completed' }
+    });
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to complete order:', error);
+    return { error: 'Gagal menyelesaikan pesanan.' };
+  }
+}

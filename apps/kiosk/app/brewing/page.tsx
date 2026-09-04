@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import mqtt from 'mqtt';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { deductCupAction } from '../actions';
+import { deductCupAction, completeOrderAction } from '../actions';
 import { useKioskStore } from '@/store/kiosk-store';
 
 function BrewingContent() {
@@ -13,6 +13,7 @@ function BrewingContent() {
   const searchParams = useSearchParams();
   const menuId = searchParams.get('menu');
   const consultationId = searchParams.get('consultationId');
+  const orderId = searchParams.get('orderId');
   
   const { machineId } = useKioskStore();
   const [progress, setProgress] = useState(0);
@@ -121,6 +122,9 @@ function BrewingContent() {
     if (progress === 100) {
       if (machineId) {
         deductCupAction(machineId).catch(console.error);
+        if (orderId) {
+          completeOrderAction(orderId).catch(console.error);
+        }
       }
       
       const timeout = setTimeout(() => {
