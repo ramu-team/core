@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import mqtt from 'mqtt';
 import { motion } from 'framer-motion';
@@ -17,87 +17,119 @@ function BrewingContent() {
   
   const { machineId, registrationCode } = useKioskStore();
   const [progress, setProgress] = useState(0);
-  const [statusText, setStatusText] = useState('Menyiapkan koneksi ke mesin...');
-  const [hasStarted, setHasStarted] = useState(false);
+  const [statusText, setStatusText] = useState('Menyiapkan koneksi...');
+  const isStartedRef = useRef(false);
 
   useEffect(() => {
-    if (!machineId || (!menuId && !consultationId) || hasStarted) return;
-    setTimeout(() => {
-      setHasStarted(true);
-    }, 0)
+    // Pastikan parameter lengkap sebelum memulai
+    if (!machineId || !registrationCode) {
+      setStatusText('Kiosk belum di-setup! Mengalihkan...');
+      setTimeout(() => router.replace('/setup'), 3000);
+      return;
+    }
+    if (!menuId && !consultationId) {
+      setStatusText('Pesanan tidak valid! Mengalihkan...');
+      setTimeout(() => router.replace('/'), 3000);
+      return;
+    }
+    
+    // Mencegah double-execution di React Strict Mode
+    if (isStartedRef.current) return;
+    isStartedRef.current = true;
     
     let client: mqtt.MqttClient | null = null;
-    let isMounted = true;
+    const abortController = new AbortController();
 
-    const startBrewing = async () => {
+    const initBrewing = async () => {
       try {
-        setStatusText('Menyiapkan koneksi ke mesin...');
-        
-        // 1. Connect to MQTT for real-time progress FIRST
+        // 1. SETUP MQTT CONNECTION
         const brokerUrl = process.env.NEXT_PUBLIC_MQTT_BROKER_URL || 'wss://d763ca9eaaaf4650b898cd2c362b6eba.s1.eu.hivemq.cloud:8884/mqtt';
         const topicPrefix = process.env.NEXT_PUBLIC_MQTT_TOPIC_PREFIX || 'ramu-kiosk-prod';
-        const username = process.env.NEXT_PUBLIC_MQTT_USERNAME;
-        const password = process.env.NEXT_PUBLIC_MQTT_PASSWORD;
         
         client = mqtt.connect(brokerUrl, {
-          username,
-          password
+          username: process.env.NEXT_PUBLIC_MQTT_USERNAME,
+          password: process.env.NEXT_PUBLIC_MQTT_PASSWORD
         });
         
         await new Promise<void>((resolve, reject) => {
-          const timeout = setTimeout(() => reject(new Error("Timeout connect MQTT")), 5000);
+          const timeout = setTimeout(() => reject(new Error("Timeout koneksi MQTT (5s)")), 5000);
+          
           client?.on('connect', () => {
             clearTimeout(timeout);
             console.log('Connected to MQTT Broker via WebSocket');
             client?.subscribe(`${topicPrefix}/machine/${registrationCode}/progress`);
             resolve();
           });
+
+          client?.on('error', (err) => {
+            clearTimeout(timeout);
+            reject(err);
+          });
         });
 
-        // 2. Send command to Kiosk API
-        setStatusText('Mengirim instruksi ke mesin...');
-        const payload: Record<string, unknown> = { machineId, registrationCode };
-        if (menuId) payload.menuId = menuId;
-        if (consultationId) payload.consultationId = consultationId;
-
-        const res = await fetch('/api/machine/brew', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || 'Gagal mengirim instruksi');
-        }
-
-        if (!isMounted) return;
-        setStatusText('Menunggu respon mesin...');
-
+        // 2. SETUP MQTT LISTENER (SEBELUM FETCH)
         client.on('message', (topic, message) => {
           try {
             const payload = JSON.parse(message.toString());
+            
             if (payload.progress !== undefined) {
               setProgress(Math.min(payload.progress, 100));
             }
             if (payload.statusText) {
               setStatusText(payload.statusText);
             }
-            
             if (payload.progress >= 100) {
-              setStatusText('Jamu Siap Dinikmati!');
-              client?.end();
+              client?.end(); // Putus koneksi saat selesai
             }
           } catch (e) {
-            console.error('Failed to parse MQTT message', e);
+            console.error('Failed to parse MQTT message:', e);
           }
         });
 
+        // 3. SEND API REQUEST
+        setStatusText('Mengirim instruksi ke mesin...');
+        
+        const payload: Record<string, unknown> = { machineId, registrationCode };
+        if (menuId) payload.menuId = menuId;
+        if (consultationId) payload.consultationId = consultationId;
+
+        // Beri timeout 10 detik untuk API Call (mencegah koneksi gantung)
+        const timeoutId = setTimeout(() => abortController.abort("TIMEOUT"), 10000);
+
+        const res = await fetch('/api/machine/brew', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: abortController.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Gagal mengirim instruksi ke API');
+        }
+
+        setStatusText('Menunggu respon mesin...');
+
       } catch (error: unknown) {
-        console.error('Failed to start brewing:', error);
-        const msg = error instanceof Error ? error.message : 'Unknown error';
-        alert(`Gagal memulai pembuatan jamu: ${msg}`);
-        // Fallback simulation if real machine fails
+        // Abaikan error HANYA JIKA komponen sudah di-unmount (bukan karena timeout 10s)
+        if (abortController.signal.aborted && abortController.signal.reason !== "TIMEOUT") {
+          return; 
+        }
+        
+        console.error('Brewing initialization error:', error);
+        
+        let msg = 'Terjadi kesalahan sistem';
+        if (error instanceof Error) {
+          msg = error.message;
+        } else if (abortController.signal.reason === "TIMEOUT") {
+          msg = "Koneksi ke server (API) memakan waktu terlalu lama (Timeout 10s).";
+        }
+        
+        setStatusText(`Gagal: ${msg}`);
+        
+        // Mode Fallback (Simulasi) jika API atau Mesin Gagal
         setTimeout(() => {
           setStatusText('Menggunakan Mode Simulasi (Fallback)...');
           let current = 0;
@@ -109,36 +141,42 @@ function BrewingContent() {
               clearInterval(interval);
             }
           }, 400);
-        }, 2000);
+        }, 3000);
       }
     };
 
-    startBrewing();
+    initBrewing();
 
+    // Cleanup function saat komponen di-unmount
     return () => {
-      isMounted = false;
+      isStartedRef.current = false; // MENCEGAH BUG STRICT MODE
+      abortController.abort();
       if (client) {
         client.end();
       }
     };
-  }, [machineId, menuId, consultationId, hasStarted]);
+  }, [machineId, registrationCode, menuId, consultationId]);
 
+  // Efek penyelesaian ketika progres mencapai 100%
   useEffect(() => {
-    // Return to Idle Screen after finished
     if (progress === 100) {
       if (machineId) {
+        // Kurangi stok cup di database
         deductCupAction(machineId).catch(console.error);
         if (orderId) {
+          // Tandai order selesai
           completeOrderAction(orderId).catch(console.error);
         }
       }
       
+      // Kembali ke layar utama setelah 6 detik
       const timeout = setTimeout(() => {
         router.replace('/');
-      }, 6000); // Wait 6 seconds for user to take their drink
+      }, 6000);
+      
       return () => clearTimeout(timeout);
     }
-  }, [progress, router, machineId]);
+  }, [progress, router, machineId, orderId]);
 
   return (
     <main className="relative flex h-screen w-screen flex-col items-center justify-center overflow-hidden bg-stone-950 px-16 py-10">
