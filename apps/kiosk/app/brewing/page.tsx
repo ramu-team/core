@@ -15,7 +15,7 @@ function BrewingContent() {
   const consultationId = searchParams.get('consultationId');
   const orderId = searchParams.get('orderId');
   
-  const { machineId } = useKioskStore();
+  const { machineId, registrationCode } = useKioskStore();
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState('Menyiapkan koneksi ke mesin...');
   const [hasStarted, setHasStarted] = useState(false);
@@ -34,7 +34,7 @@ function BrewingContent() {
         setStatusText('Mengirim instruksi ke mesin...');
         
         // 1. Send command to Kiosk API
-        const payload: Record<string, unknown> = { machineId };
+        const payload: Record<string, unknown> = { machineId, registrationCode };
         if (menuId) payload.menuId = menuId;
         if (consultationId) payload.consultationId = consultationId;
 
@@ -65,7 +65,7 @@ function BrewingContent() {
         
         client.on('connect', () => {
           console.log('Connected to MQTT Broker via WebSocket');
-          client?.subscribe(`${topicPrefix}/machine/${machineId}/progress`);
+          client?.subscribe(`${topicPrefix}/machine/${registrationCode}/progress`);
         });
 
         client.on('message', (topic, message) => {

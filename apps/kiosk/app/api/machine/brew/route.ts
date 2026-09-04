@@ -10,10 +10,10 @@ const password = process.env.NEXT_PUBLIC_MQTT_PASSWORD;
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { machineId, menuId, customRecipe, consultationId } = body;
+    const { machineId, registrationCode, menuId, customRecipe, consultationId } = body;
 
-    if (!machineId) {
-      return NextResponse.json({ error: 'machineId is required' }, { status: 400 });
+    if (!machineId || !registrationCode) {
+      return NextResponse.json({ error: 'machineId and registrationCode are required' }, { status: 400 });
     }
 
     let ingredientAmounts: { ingredient_id: string; amountMl: number }[] = [];
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
 
       client.on('connect', () => {
         clearTimeout(timeout);
-        const topic = `${topicPrefix}/machine/${machineId}/brew`;
+        const topic = `${topicPrefix}/machine/${registrationCode}/brew`;
         const payload = JSON.stringify({
           action: 'brew',
           orderId: orderId,

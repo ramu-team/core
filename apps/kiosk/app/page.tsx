@@ -9,7 +9,7 @@ import Image from 'next/image';
 
 export default function IdleScreen() {
   const router = useRouter();
-  const { locationName } = useKioskStore();
+  const { locationName, registrationCode } = useKioskStore();
 
   const handleTouch = () => {
     router.push('/mode-selection');
@@ -143,6 +143,8 @@ export default function IdleScreen() {
         </div>
         <div className="h-4 w-px bg-stone-500" />
         <span className="text-base font-medium text-stone-300">{locationName || "Location Not Set"}</span>
+        <div className="h-4 w-px bg-stone-500" />
+        <span className="text-base font-medium text-stone-400 font-mono tracking-widest">ID: {registrationCode || "UNREGISTERED"}</span>
       </motion.div>
     </main>
   );
