@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authClient } from '@/lib/auth/client';
 import { ChevronLeftIcon, Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect') || '/app';
@@ -65,5 +65,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-stone-950 flex items-center justify-center text-amber-500"><Loader2Icon className="animate-spin size-8" /></div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
