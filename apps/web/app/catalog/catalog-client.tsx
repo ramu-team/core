@@ -7,6 +7,7 @@ import mqtt from 'mqtt';
 import Image from 'next/image';
 import { Button } from '@ramu/ui/components/button';
 import { ChevronLeftIcon, LoaderIcon, CheckCircleIcon } from 'lucide-react';
+import KioskGuard from '@/components/kiosk-guard';
 
 interface Menu {
   id: string;
@@ -44,16 +45,23 @@ export default function CatalogClient({ menus }: { menus: Menu[] }) {
     client.on('connect', () => {
       client.publish(topic, JSON.stringify({ status: 'brew', menuId: menu.id }));
       client.end();
-      
-      // Save to lazy register history
-      const historyItem: OrderHistoryItem = {
-        id: crypto.randomUUID(),
-        type: 'menu',
-        title: menu.name,
-        description: menu.description || 'Pesanan jamu dari katalog',
-        timestamp: Date.now(),
-      };
-      addHistory(historyItem);
+
+      // Save to database if logged in, otherwise save to lazy register
+      import('@/app/actions/history-actions').then(({ saveOrder }) => {
+        saveOrder(activeMachineId || 'unknown', menu.id, (menu as any).price || 0).then(res => {
+          if (!res.success) {
+            // Fallback to local history
+            const historyItem: OrderHistoryItem = {
+              id: crypto.randomUUID(),
+              type: 'menu',
+              title: menu.name,
+              description: menu.description || 'Pesanan jamu dari katalog',
+              timestamp: Date.now(),
+            };
+            addHistory(historyItem);
+          }
+        });
+      });
 
       setOrderingId(null);
       setSuccessId(menu.id);
@@ -65,8 +73,9 @@ export default function CatalogClient({ menus }: { menus: Menu[] }) {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="bg-stone-950/80 backdrop-blur-md sticky top-0 z-50 flex items-center px-4 py-4 shadow-sm border-b border-white/5">
+    <KioskGuard>
+      <div className="flex flex-col min-h-screen">
+        <div className="bg-stone-950/80 backdrop-blur-md sticky top-0 z-50 flex items-center px-4 py-4 shadow-sm border-b border-white/5">
         <Button variant="ghost" size="icon" onClick={() => router.push('/')} className="rounded-full text-stone-300 hover:text-white hover:bg-white/10">
           <ChevronLeftIcon className="size-6" />
         </Button>
@@ -122,6 +131,7 @@ export default function CatalogClient({ menus }: { menus: Menu[] }) {
           </div>
         ))}
       </div>
-    </div>
+      </div>
+    </KioskGuard>
   );
 }

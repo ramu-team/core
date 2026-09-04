@@ -16,6 +16,7 @@
     "@neondatabase/auth": "0.4.2-beta",
     "@ramu/db": "workspace:*",
     "@ramu/ui": "workspace:*",
+    "html5-qrcode": "^2.3.8",
     "lucide-react": "^1.28.0",
     "mqtt": "^5.15.2",
     "next": "16.2.6",

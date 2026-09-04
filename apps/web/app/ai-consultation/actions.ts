@@ -2,6 +2,7 @@
 
 import { prisma } from '@ramu/db';
 import { GoogleGenAI, Type, Schema } from '@google/genai';
+import { syncUser } from '@/app/actions/history-actions';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -100,9 +101,12 @@ export async function recommendAIAction({
     }
 
     // 4. Save to Database
-    let user = await prisma.user.findFirst({ where: { is_guest: true } });
+    let user = await syncUser();
     if (!user) {
-      user = await prisma.user.create({ data: { is_guest: true } });
+      user = await prisma.user.findFirst({ where: { is_guest: true } });
+      if (!user) {
+        user = await prisma.user.create({ data: { is_guest: true } });
+      }
     }
 
     const aiConsultation = await prisma.consultationHistory.create({

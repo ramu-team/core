@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { Button } from '@ramu/ui/components/button';
 import { ChevronLeftIcon, LoaderIcon, CheckCircleIcon, SparklesIcon } from 'lucide-react';
 import { recommendAIAction } from './actions';
+import KioskGuard from '@/components/kiosk-guard';
 
 interface Symptom {
   id: string;
@@ -90,13 +91,16 @@ export default function AIClient({ symptoms }: { symptoms: Symptom[] }) {
       }));
       client.end();
       
-      addHistory({
-        id: crypto.randomUUID(),
-        type: 'ai',
-        title: result.recipe.name,
-        description: `Rekomendasi AI: ${result.explanation}`,
-        timestamp: Date.now(),
-      });
+      const { isLoggedIn } = useUserStore.getState();
+      if (!isLoggedIn) {
+        addHistory({
+          id: crypto.randomUUID(),
+          type: 'ai',
+          title: result.recipe.name,
+          description: `Rekomendasi AI: ${result.explanation}`,
+          timestamp: Date.now(),
+        });
+      }
 
       setTimeout(() => {
         router.push('/');
@@ -105,8 +109,9 @@ export default function AIClient({ symptoms }: { symptoms: Symptom[] }) {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="bg-stone-950/80 backdrop-blur-md sticky top-0 z-50 flex items-center px-4 py-4 shadow-sm border-b border-white/5">
+    <KioskGuard>
+      <div className="flex flex-col min-h-screen">
+        <div className="bg-stone-950/80 backdrop-blur-md sticky top-0 z-50 flex items-center px-4 py-4 shadow-sm border-b border-white/5">
         <Button variant="ghost" size="icon" onClick={() => router.push('/')} className="rounded-full text-stone-300 hover:text-white hover:bg-white/10">
           <ChevronLeftIcon className="size-6" />
         </Button>
@@ -209,6 +214,7 @@ export default function AIClient({ symptoms }: { symptoms: Symptom[] }) {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </KioskGuard>
   );
 }

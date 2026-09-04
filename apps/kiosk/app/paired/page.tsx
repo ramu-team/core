@@ -101,7 +101,7 @@ function PairedContent() {
     }
   }, [status, router, orderPayload]);
 
-  const qrUrl = `${webUrl}/?session=${sessionId}${machineId ? `&machineId=${machineId}` : ''}`;
+  const qrUrl = `${webUrl}/app?session=${sessionId}${machineId ? `&machineId=${machineId}` : ''}`;
 
   return (
     <main className="relative flex h-screen w-screen flex-col overflow-hidden bg-stone-950 px-16 py-10">
