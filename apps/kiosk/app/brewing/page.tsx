@@ -31,9 +31,31 @@ function BrewingContent() {
 
     const startBrewing = async () => {
       try {
-        setStatusText('Mengirim instruksi ke mesin...');
+        setStatusText('Menyiapkan koneksi ke mesin...');
         
-        // 1. Send command to Kiosk API
+        // 1. Connect to MQTT for real-time progress FIRST
+        const brokerUrl = process.env.NEXT_PUBLIC_MQTT_BROKER_URL || 'wss://d763ca9eaaaf4650b898cd2c362b6eba.s1.eu.hivemq.cloud:8884/mqtt';
+        const topicPrefix = process.env.NEXT_PUBLIC_MQTT_TOPIC_PREFIX || 'ramu-kiosk-prod';
+        const username = process.env.NEXT_PUBLIC_MQTT_USERNAME;
+        const password = process.env.NEXT_PUBLIC_MQTT_PASSWORD;
+        
+        client = mqtt.connect(brokerUrl, {
+          username,
+          password
+        });
+        
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error("Timeout connect MQTT")), 5000);
+          client?.on('connect', () => {
+            clearTimeout(timeout);
+            console.log('Connected to MQTT Broker via WebSocket');
+            client?.subscribe(`${topicPrefix}/machine/${registrationCode}/progress`);
+            resolve();
+          });
+        });
+
+        // 2. Send command to Kiosk API
+        setStatusText('Mengirim instruksi ke mesin...');
         const payload: Record<string, unknown> = { machineId, registrationCode };
         if (menuId) payload.menuId = menuId;
         if (consultationId) payload.consultationId = consultationId;
@@ -51,22 +73,6 @@ function BrewingContent() {
 
         if (!isMounted) return;
         setStatusText('Menunggu respon mesin...');
-
-        // 2. Connect to MQTT for real-time progress
-        const brokerUrl = process.env.NEXT_PUBLIC_MQTT_BROKER_URL || 'wss://d763ca9eaaaf4650b898cd2c362b6eba.s1.eu.hivemq.cloud:8884/mqtt';
-        const topicPrefix = process.env.NEXT_PUBLIC_MQTT_TOPIC_PREFIX || 'ramu-kiosk-prod';
-        const username = process.env.NEXT_PUBLIC_MQTT_USERNAME;
-        const password = process.env.NEXT_PUBLIC_MQTT_PASSWORD;
-        
-        client = mqtt.connect(brokerUrl, {
-          username,
-          password
-        });
-        
-        client.on('connect', () => {
-          console.log('Connected to MQTT Broker via WebSocket');
-          client?.subscribe(`${topicPrefix}/machine/${registrationCode}/progress`);
-        });
 
         client.on('message', (topic, message) => {
           try {
